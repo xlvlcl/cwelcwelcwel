@@ -5,12 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GrandRP Finder | by kejcpi</title>
     <style>
-        /* --- PALETA KOLORÓW (CZERWONY) --- */
+        /* --- PALETA KOLORÓW --- */
         :root {
-            --bg: #050505;
-            --panel: #111111;
-            --accent: #ff3b3b;         /* Krwista czerwień */
-            --accent-glow: rgba(255, 59, 59, 0.4);
+            --bg: #050505;             /* Tło całej strony */
+            --panel: #0a0a0a;          /* Tło paneli/kart */
+            
+            /* NEONOWY FIOLET (GŁÓWNY MOTYW) */
+            --theme: #b026ff;
+            --theme-glow: rgba(176, 38, 255, 0.4);
+            
+            /* CZERWONY (TYLKO DLA NAGŁÓWKA) */
+            --header-red: #ff3b3b;
+            --header-glow: rgba(255, 59, 59, 0.5);
+
             --text: #ffffff;
             --border: #333;
         }
@@ -35,119 +42,135 @@
 
         .wrapper { width: 100%; max-width: 1300px; }
 
-        /* --- NAGŁÓWEK --- */
+        /* --- NAGŁÓWEK (CZERWONY) --- */
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
 
         h1 {
             font-size: 3rem;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             margin: 0;
-            color: var(--accent);
-            text-shadow: 0 0 20px var(--accent-glow);
+            color: var(--header-red);
+            text-shadow: 0 0 25px var(--header-glow);
         }
 
         .signature {
             font-size: 1rem;
-            color: var(--accent);
+            color: var(--header-red);
             letter-spacing: 5px;
             text-transform: uppercase;
             font-weight: bold;
             margin-top: 5px;
             position: relative;
             display: inline-block;
-            opacity: 0.8;
+            opacity: 0.9;
+            text-shadow: 0 0 10px var(--header-glow);
         }
         .signature::before, .signature::after { content: "—"; color: #555; margin: 0 10px; }
 
-        /* --- VIDEO --- */
+        /* --- VIDEO (FIOLETOWA RAMKA) --- */
         .video-box {
             width: 100%; max-width: 400px; margin: 0 auto 30px;
-            border: 2px solid var(--accent); border-radius: 10px;
+            border: 2px solid var(--theme); border-radius: 15px;
             overflow: hidden; background: #000;
-            box-shadow: 0 0 20px var(--accent-glow);
+            box-shadow: 0 0 25px var(--theme-glow);
         }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
         /* --- PANEL STEROWANIA --- */
         .controls {
-            background: var(--panel); padding: 20px;
-            border: 1px solid var(--border); border-radius: 12px;
-            display: flex; flex-wrap: wrap; gap: 15px;
-            align-items: flex-start; /* Zmienione na start, żeby inputy się nie rozjeżdżały */
+            background: rgba(255, 255, 255, 0.02); 
+            padding: 25px;
+            border-radius: 20px;
+            display: flex; flex-wrap: wrap; gap: 20px;
+            align-items: flex-start;
             margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            justify-content: center;
         }
 
         .input-group {
-            display: flex; flex-direction: column; gap: 5px;
-            flex: 1; min-width: 180px;
+            display: flex; flex-direction: column; gap: 8px;
+            flex: 1; min-width: 200px;
         }
 
         label {
-            font-size: 0.75rem; color: var(--accent);
-            font-weight: bold; text-transform: uppercase;
+            font-size: 0.75rem; color: var(--theme);
+            font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
+            text-shadow: 0 0 5px var(--theme-glow);
         }
 
+        /* INPUTY I SELECT (FIOLETOWE) */
         input, select {
-            background: #080808; border: 1px solid var(--border);
-            color: white; padding: 12px; border-radius: 4px;
+            background: #000; 
+            border: 1px solid var(--theme);
+            color: white; padding: 14px; border-radius: 10px;
             outline: none; font-size: 1rem; transition: 0.3s;
             width: 100%;
+            box-shadow: 0 0 5px rgba(176, 38, 255, 0.1);
         }
 
         input:focus, select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 10px var(--accent-glow);
+            border-color: var(--theme);
+            box-shadow: 0 0 15px var(--theme-glow);
+            background: #0a0a0a;
         }
 
-        /* --- PRZYCISKI --- */
+        /* --- PRZYCISKI (FIOLETOWE) --- */
         .btn-group {
-            display: flex; gap: 10px; align-items: flex-end; height: 100%; padding-top: 19px;
+            display: flex; gap: 15px; align-items: flex-end; height: 100%; padding-top: 22px;
         }
 
         button {
-            padding: 12px 25px; background: transparent;
-            border: 1px solid var(--accent); color: var(--accent);
-            border-radius: 4px; cursor: pointer; font-weight: bold;
-            text-transform: uppercase; font-size: 0.9rem; height: 44px;
-            transition: 0.3s; min-width: 120px;
+            padding: 12px 30px; background: transparent;
+            border: 1px solid var(--theme); color: var(--theme);
+            border-radius: 10px; cursor: pointer; font-weight: bold;
+            text-transform: uppercase; font-size: 0.9rem; height: 48px;
+            transition: 0.3s; min-width: 130px;
+            box-shadow: 0 0 5px rgba(176, 38, 255, 0.1);
         }
 
         button:hover, button.active {
-            background: var(--accent); color: #000;
-            box-shadow: 0 0 20px var(--accent);
+            background: var(--theme); color: #000;
+            box-shadow: 0 0 25px var(--theme);
         }
 
         /* --- STATYSTYKI --- */
         .stats-bar {
             display: flex; justify-content: space-between;
-            color: #666; font-size: 0.85rem; margin-bottom: 15px; padding: 0 5px;
+            color: #888; font-size: 0.9rem; margin-bottom: 20px; padding: 0 10px;
+            text-align: center; width: 100%;
         }
 
-        /* --- GRID --- */
+        /* --- GRID (KAFELKI) --- */
         #grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
+            gap: 15px; width: 100%;
         }
 
         .card {
-            background: var(--panel); border: 1px solid var(--border);
-            padding: 15px; border-radius: 6px; display: flex; align-items: center;
-            transition: 0.2s;
+            background: var(--panel); 
+            border: 1px solid #222; /* Domyślnie ciemna ramka */
+            padding: 15px; border-radius: 10px; display: flex; align-items: center;
+            transition: 0.3s;
         }
+        
         .card:hover {
-            border-color: var(--accent); background: #181818;
-            transform: translateY(-2px); box-shadow: 0 0 10px var(--accent-glow);
+            border-color: var(--theme); 
+            background: #111;
+            transform: translateY(-3px); 
+            box-shadow: 0 0 15px var(--theme-glow);
         }
 
         .id-box {
-            color: var(--accent); border: 1px solid var(--accent);
+            color: var(--theme); 
+            background: rgba(176, 38, 255, 0.05);
+            border: 1px solid var(--theme);
             font-weight: bold; font-size: 1.1rem; padding: 5px 10px;
-            border-radius: 4px; margin-right: 15px; min-width: 60px;
+            border-radius: 6px; margin-right: 15px; min-width: 60px;
             text-align: center; font-family: monospace;
+            box-shadow: 0 0 5px var(--theme-glow);
         }
 
         .nick-txt {
@@ -156,7 +179,8 @@
         }
 
         /* Klasa do ukrywania elementów */
-        .hidden-input { display: none; margin-top: 10px; border-color: var(--accent); }
+        .hidden-input { display: none; margin-top: 10px; border-color: var(--theme); }
+        .hidden-list { display: none !important; }
     </style>
 </head>
 <body>
@@ -179,7 +203,7 @@
             <select id="serverSelect" onchange="checkCustomServer()">
                 <option value="8rml8v" selected>GrandRP (PL)</option>
                 <option value="dyrx5y">BetterSide</option>
-                <option value="custom" style="font-weight:bold; color:#ff3b3b;">-- Wpisz własne ID --</option>
+                <option value="custom" style="font-weight:bold; color:#b026ff;">-- Wpisz własne ID --</option>
             </select>
             <input type="text" id="customSrv" class="hidden-input" placeholder="np. 6y6m6y" onchange="manualRefresh()">
         </div>
@@ -212,7 +236,6 @@
     let players = [];
     let showList = true;
 
-    // Funkcja sprawdzająca czy wybrano opcję "Wpisz własne ID"
     function checkCustomServer() {
         const select = document.getElementById('serverSelect');
         const customInput = document.getElementById('customSrv');
@@ -222,17 +245,15 @@
             customInput.focus();
         } else {
             customInput.style.display = 'none';
-            manualRefresh(); // Odśwież od razu po zmianie na preset
+            manualRefresh();
         }
     }
 
     async function getData(isAuto = false) {
         let sID = document.getElementById('serverSelect').value;
         
-        // Jeśli wybrano custom, pobierz ID z pola tekstowego
         if (sID === 'custom') {
             sID = document.getElementById('customSrv').value;
-            // Jeśli pole puste, nie pobieraj
             if (!sID || sID.length < 3) return; 
         }
 
@@ -254,7 +275,7 @@
                 render();
             }
         } catch(e) {
-            if (!isAuto) alert("Błąd! Nie znaleziono serwera o takim ID.");
+            if (!isAuto) alert("Błąd! Nie znaleziono serwera.");
         }
 
         if (!isAuto) btn.innerText = "ODŚWIEŻ";
@@ -276,7 +297,7 @@
             return mId && mNick;
         });
 
-        counter.innerHTML = `Online: <strong style="color:var(--accent)">${filtered.length}</strong>`;
+        counter.innerHTML = `Online: <strong style="color:var(--theme)">${filtered.length}</strong>`;
 
         if(!showList) {
             grid.innerHTML = "";
