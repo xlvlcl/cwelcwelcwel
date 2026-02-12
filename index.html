@@ -12,13 +12,10 @@
             
             /* NEONOWY FIOLET (GŁÓWNY MOTYW) */
             --theme: #b026ff;
-            --theme-glow: rgba(176, 38, 255, 0.4);
+            --theme-glow: rgba(176, 38, 255, 0.5);
             
-            /* KOLORY NAGŁÓWKA */
-            --header-gray: #e6e6e6;    /* Biało-szary tytul */
-            --header-glow: rgba(255, 255, 255, 0.3);
-
             --text: #ffffff;
+            --text-dim: #888;
             --border: #333;
         }
 
@@ -51,13 +48,17 @@
             text-transform: uppercase;
             letter-spacing: 3px;
             margin: 0;
-            color: var(--header-gray); /* ZMIANA NA BIAŁO-SZARY */
-            text-shadow: 0 0 20px var(--header-glow);
+            /* Gradient pasujący do reszty (Biały -> Fiolet) */
+            background: linear-gradient(to bottom, #ffffff 40%, #b026ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* Fioletowa poświata (cień filtra, bo gradient text nie działa ze zwykłym text-shadow) */
+            filter: drop-shadow(0 0 15px var(--theme-glow));
         }
 
         .signature {
             font-size: 1rem;
-            color: var(--theme); /* ZMIANA NA FIOLETOWY (DOMINUJĄCY) */
+            color: var(--theme);
             letter-spacing: 5px;
             text-transform: uppercase;
             font-weight: bold;
@@ -65,11 +66,11 @@
             position: relative;
             display: inline-block;
             opacity: 1;
-            text-shadow: 0 0 15px var(--theme-glow);
+            text-shadow: 0 0 10px var(--theme-glow);
         }
         .signature::before, .signature::after { content: "—"; color: #444; margin: 0 10px; }
 
-        /* --- VIDEO (FIOLETOWA RAMKA) --- */
+        /* --- VIDEO --- */
         .video-box {
             width: 100%; max-width: 400px; margin: 0 auto 30px;
             border: 2px solid var(--theme); border-radius: 15px;
@@ -88,6 +89,7 @@
             align-items: flex-start;
             margin-bottom: 20px;
             justify-content: center;
+            border: 1px solid rgba(176, 38, 255, 0.1);
         }
 
         .input-group {
@@ -101,7 +103,7 @@
             text-shadow: 0 0 5px var(--theme-glow);
         }
 
-        /* INPUTY I SELECT (FIOLETOWE) */
+        /* INPUTY I SELECT */
         input, select {
             background: #000; 
             border: 1px solid var(--theme);
@@ -117,7 +119,7 @@
             background: #0a0a0a;
         }
 
-        /* --- PRZYCISKI (FIOLETOWE) --- */
+        /* --- PRZYCISKI --- */
         .btn-group {
             display: flex; gap: 15px; align-items: flex-end; height: 100%; padding-top: 22px;
         }
@@ -136,11 +138,39 @@
             box-shadow: 0 0 25px var(--theme);
         }
 
-        /* --- STATYSTYKI --- */
+        /* --- STATYSTYKI (CENTROWANIE ONLINE) --- */
         .stats-bar {
-            display: flex; justify-content: space-between;
-            color: #888; font-size: 0.9rem; margin-bottom: 20px; padding: 0 10px;
-            text-align: center; width: 100%;
+            display: flex; 
+            justify-content: center; /* Wyśrodkowanie zawartości */
+            align-items: center;     /* Wyrównanie w pionie */
+            position: relative;      /* Dla pozycjonowania czasu */
+            margin-bottom: 25px; 
+            padding: 0 10px;
+            width: 100%;
+            height: 40px;
+        }
+
+        /* Licznik ONLINE na środku */
+        #counter {
+            font-size: 1.8rem; /* Powiększony */
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+        }
+        
+        #counter strong {
+            color: var(--theme);
+            text-shadow: 0 0 15px var(--theme);
+        }
+
+        /* Czas po prawej stronie (absolutnie) */
+        #time {
+            position: absolute;
+            right: 0;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            font-family: monospace;
         }
 
         /* --- GRID (KAFELKI) --- */
@@ -151,6 +181,193 @@
 
         .card {
             background: var(--panel); 
-            border: 1px solid #222; /* Domyślnie ciemna ramka */
+            border: 1px solid #222; 
             padding: 15px; border-radius: 10px; display: flex; align-items: center;
             transition: 0.3s;
+        }
+        
+        .card:hover {
+            border-color: var(--theme); 
+            background: #111;
+            transform: translateY(-3px); 
+            box-shadow: 0 0 15px var(--theme-glow);
+        }
+
+        .id-box {
+            color: var(--theme); 
+            background: rgba(176, 38, 255, 0.05);
+            border: 1px solid var(--theme);
+            font-weight: bold; font-size: 1.1rem; padding: 5px 10px;
+            border-radius: 6px; margin-right: 15px; min-width: 60px;
+            text-align: center; font-family: monospace;
+            box-shadow: 0 0 5px var(--theme-glow);
+        }
+
+        .nick-txt {
+            color: #e0e0e0; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis; font-weight: 500;
+        }
+
+        .hidden-input { display: none; margin-top: 10px; border-color: var(--theme); }
+        .hidden-list { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <header>
+        <h1>GrandRP Finder</h1>
+        <div class="signature">by kejcpi</div>
+    </header>
+
+    <div class="video-box">
+        <div class="video-wrapper">
+            <iframe src="https://www.youtube.com/embed/4DIcijdahZE?autoplay=1&mute=1&loop=1&playlist=4DIcijdahZE" allow="autoplay" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="input-group">
+            <label>Wybierz Serwer</label>
+            <select id="serverSelect" onchange="checkCustomServer()">
+                <option value="8rml8v" selected>GrandRP (PL)</option>
+                <option value="dyrx5y">BetterSide</option>
+                <option value="custom" style="font-weight:bold; color:#b026ff;">-- Wpisz własne ID --</option>
+            </select>
+            <input type="text" id="customSrv" class="hidden-input" placeholder="np. 6y6m6y" onchange="manualRefresh()">
+        </div>
+
+        <div class="input-group">
+            <label>Szukaj ID</label>
+            <input type="number" id="sid" placeholder="np. 123" oninput="render()">
+        </div>
+
+        <div class="input-group">
+            <label>Szukaj Nicku</label>
+            <input type="text" id="snick" placeholder="np. cwel" oninput="render()">
+        </div>
+        
+        <div class="btn-group">
+            <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
+            <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <span id="counter">Ładowanie...</span>
+        <span id="time"></span>
+    </div>
+
+    <div id="grid"></div>
+</div>
+
+<script>
+    let players = [];
+    let showList = true;
+
+    function checkCustomServer() {
+        const select = document.getElementById('serverSelect');
+        const customInput = document.getElementById('customSrv');
+        
+        if (select.value === 'custom') {
+            customInput.style.display = 'block';
+            customInput.focus();
+        } else {
+            customInput.style.display = 'none';
+            manualRefresh();
+        }
+    }
+
+    async function getData(isAuto = false) {
+        let sID = document.getElementById('serverSelect').value;
+        
+        if (sID === 'custom') {
+            sID = document.getElementById('customSrv').value;
+            if (!sID || sID.length < 3) return; 
+        }
+
+        const btn = document.getElementById('refreshBtn');
+        const timeSpan = document.getElementById('time');
+        
+        if (!isAuto) btn.innerText = "...";
+        
+        try {
+            const res = await fetch(`https://corsproxy.io/?https://servers-frontend.fivem.net/api/servers/single/${sID}?t=${Date.now()}`);
+            const data = await res.json();
+            
+            if (data && data.Data && data.Data.players) {
+                players = data.Data.players;
+                players.sort((a,b) => a.id - b.id);
+                
+                const now = new Date();
+                timeSpan.innerText = "Aktualizacja: " + now.toLocaleTimeString();
+                render();
+            }
+        } catch(e) {
+            if (!isAuto) alert("Błąd! Nie znaleziono serwera.");
+        }
+
+        if (!isAuto) btn.innerText = "ODŚWIEŻ";
+    }
+
+    function manualRefresh() {
+        getData(false);
+    }
+
+    function render() {
+        const idVal = document.getElementById('sid').value;
+        const nickVal = document.getElementById('snick').value.toLowerCase();
+        const grid = document.getElementById('grid');
+        const counter = document.getElementById('counter');
+
+        const filtered = players.filter(p => {
+            const mId = idVal ? p.id.toString().startsWith(idVal) : true;
+            const mNick = nickVal ? p.name.toLowerCase().includes(nickVal) : true;
+            return mId && mNick;
+        });
+
+        counter.innerHTML = `Online: <strong>${filtered.length}</strong>`;
+
+        if(!showList) {
+            grid.innerHTML = "";
+            return;
+        }
+
+        let html = "";
+        filtered.forEach(p => {
+            html += `
+                <div class="card">
+                    <div class="id-box">${p.id}</div>
+                    <span class="nick-txt" title="${p.name}">${p.name}</span>
+                </div>
+            `;
+        });
+        grid.innerHTML = html || "<div style='color:#555; padding:10px;'>Brak wyników.</div>";
+    }
+
+    function toggleList() {
+        showList = !showList;
+        const btn = document.getElementById('btnToggle');
+        
+        if(showList) {
+            btn.innerText = "Ukryj listę";
+            btn.classList.add('active');
+        } else {
+            btn.innerText = "Pokaż listę";
+            btn.classList.remove('active');
+        }
+        render();
+    }
+
+    // Start
+    getData(false);
+
+    // Auto-odświeżanie co 15 sekund
+    setInterval(() => {
+        getData(true);
+    }, 15000);
+
+</script>
+
+</body>
+</html>
