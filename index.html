@@ -3,262 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GrandRP | Live Finder PRO</title>
+    <title>GrandRP | Player Dashboard</title>
     <style>
         :root {
-            --bg: #080808;
-            --card: #121212;
-            --accent: #ff3e3e; /* Krwista czerwień */
-            --text: #ffffff;
-            --text-dim: #777;
+            --bg: #0b0f19;           /* Głęboki granat/czerń */
+            --panel: #151b2b;        /* Ciemny błękit panelu */
+            --accent: #00ff88;       /* Neonowa mięta */
+            --text-main: #ffffff;
+            --text-dim: #8892b0;
+            --card-hover: #1c253d;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg);
-            color: var(--text);
-            padding: 20px;
-            overflow-x: hidden;
+            color: var(--text-main);
+            padding: 30px;
+            line-height: 1.6;
         }
 
-        /* Dashboard na całą stronę */
-        .app-container {
+        .wrapper {
             width: 100%;
-            max-width: 1800px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
+        /* Nagłówek */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
-            border-bottom: 1px solid #222;
             margin-bottom: 30px;
         }
 
         h1 {
-            font-size: 2rem;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+            font-weight: 800;
+            color: var(--text-main);
+            border-left: 5px solid var(--accent);
+            padding-left: 15px;
         }
 
         /* Panel sterowania */
-        .search-bar {
-            display: grid;
-            grid-template-columns: 120px 1fr 1fr 200px;
-            gap: 15px;
-            background: var(--card);
+        .search-container {
+            background: var(--panel);
             padding: 25px;
-            border-radius: 15px;
-            border: 1px solid #222;
+            border-radius: 16px;
+            display: grid;
+            grid-template-columns: 120px 1fr 1fr auto;
+            gap: 20px;
+            align-items: end;
             margin-bottom: 30px;
-            position: sticky;
-            top: 10px;
-            z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid rgba(0, 255, 136, 0.05);
         }
 
-        .input-field {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        .field { display: flex; flex-direction: column; gap: 8px; }
 
         label {
             font-size: 0.75rem;
-            text-transform: uppercase;
+            font-weight: 700;
             color: var(--accent);
-            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         input {
-            background: #1a1a1a;
-            border: 1px solid #333;
+            background: #0b0f19;
+            border: 1px solid #2d3748;
             padding: 14px;
-            border-radius: 8px;
+            border-radius: 10px;
             color: white;
             font-size: 1rem;
             outline: none;
-            transition: 0.2s;
+            transition: all 0.3s;
         }
 
         input:focus {
             border-color: var(--accent);
-            background: #222;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
         }
 
-        .btn-refresh {
-            background: var(--accent);
+        /* Przycisk przełączania widoku */
+        .toggle-btn {
+            background: #2d3748;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-weight: bold;
+            padding: 14px 20px;
+            border-radius: 10px;
             cursor: pointer;
-            height: 48px;
-            margin-top: auto;
+            font-weight: bold;
             transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .btn-refresh:hover {
-            filter: brightness(1.2);
-            transform: scale(1.02);
+        .toggle-btn:hover { background: #3d4a61; }
+        .toggle-btn.active { background: var(--accent); color: #0b0f19; }
+
+        /* Statystyki */
+        .info-bar {
+            margin-bottom: 20px;
+            color: var(--text-dim);
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
         }
 
-        /* Siatka kafelków */
-        #playerGrid {
+        /* Grid Graczy */
+        #playerSection { transition: opacity 0.3s; }
+
+        #grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Duże kafelki */
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
         }
 
-        .player-tile {
-            background: var(--card);
-            padding: 25px;
+        .card {
+            background: var(--panel);
+            padding: 20px;
             border-radius: 12px;
             display: flex;
             align-items: center;
-            border: 1px solid #222;
-            transition: 0.3s;
-            animation: fadeIn 0.3s ease;
+            border: 1px solid transparent;
+            transition: 0.2s;
         }
 
-        .player-tile:hover {
-            border-color: var(--accent);
-            transform: translateY(-5px);
-            background: #181818;
+        .card:hover {
+            transform: translateY(-3px);
+            background: var(--card-hover);
+            border-color: rgba(0, 255, 136, 0.3);
         }
 
-        .id-box {
-            font-size: 1.8rem; /* Wielkie ID */
-            font-weight: 900;
+        .id-badge {
+            font-size: 1.5rem;
+            font-weight: 800;
             color: var(--accent);
-            margin-right: 20px;
-            padding-right: 20px;
-            border-right: 2px solid #222;
-            min-width: 80px;
+            min-width: 70px;
+            border-right: 2px solid #2d3748;
+            margin-right: 15px;
         }
 
-        .name-box {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: #fff;
+        .name-label {
+            font-size: 1.05rem;
+            color: #e2e8f0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .count-info {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            color: var(--text-dim);
-        }
+        .hidden { display: none !important; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 1000px) {
-            .search-bar { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 900px) {
+            .search-container { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="wrapper">
     <header>
-        <h1>GrandRP Finder <span style="color:white; font-size: 0.5em; vertical-align: middle;">LIVE</span></h1>
-        <div id="updateTime" style="color: #444; font-size: 0.9rem;"></div>
+        <h1>GrandRP Finder</h1>
+        <div id="statusUpdate" style="font-size: 0.8rem; color: var(--text-dim);"></div>
     </header>
 
-    <div class="search-bar">
-        <div class="input-field">
+    <div class="search-container">
+        <div class="field">
             <label>Server</label>
-            <input type="text" id="srvId" value="8rml8v">
+            <input type="text" id="srv" value="8rml8v">
         </div>
-        <div class="input-field">
-            <label>Szukaj ID (Live)</label>
-            <input type="number" id="searchId" placeholder="Wpisz ID..." oninput="filterPlayers()">
+        <div class="field">
+            <label>Szukaj ID</label>
+            <input type="number" id="inputId" placeholder="Wpisz ID..." oninput="filter()">
         </div>
-        <div class="input-field">
-            <label>Szukaj Nicku (Live)</label>
-            <input type="text" id="searchNick" placeholder="Wpisz Nick..." oninput="filterPlayers()">
+        <div class="field">
+            <label>Szukaj Nicku</label>
+            <input type="text" id="inputNick" placeholder="Wpisz nick..." oninput="filter()">
         </div>
-        <button class="btn-refresh" onclick="loadData()">Odśwież Dane</button>
+        <button id="toggleList" class="toggle-btn active" onclick="toggleVisibility()">
+            Pokaż listę
+        </button>
     </div>
 
-    <div id="count" class="count-info"></div>
-    <div id="playerGrid">
+    <div id="playerSection">
+        <div class="info-bar">
+            <div id="count">Wczytywanie graczy...</div>
         </div>
+        <div id="grid"></div>
+    </div>
 </div>
 
 <script>
-    let allPlayers = []; // Tu trzymamy pobranych graczy
+    let players = [];
+    let isVisible = true;
 
-    // Funkcja pobierająca dane (wywoływana raz lub po kliknięciu odśwież)
-    async function loadData() {
-        const sID = document.getElementById('srvId').value;
-        const grid = document.getElementById('playerGrid');
-        const countBox = document.getElementById('count');
-        
-        grid.innerHTML = "<p style='color:var(--accent)'>Pobieranie listy graczy...</p>";
-        
+    async function updateData() {
+        const sID = document.getElementById('srv').value;
         try {
             const res = await fetch(`https://corsproxy.io/?https://servers-frontend.fivem.net/api/servers/single/${sID}`);
             const data = await res.json();
-            allPlayers = data.Data.players;
+            players = data.Data.players;
+            players.sort((a,b) => a.id - b.id);
             
-            // Sortowanie po ID
-            allPlayers.sort((a,b) => a.id - b.id);
-            
-            filterPlayers(); // Od razu filtrujemy (pokaże wszystkich jeśli pola są puste)
-            
-            const now = new Date();
-            document.getElementById('updateTime').innerText = "Ostatnia aktualizacja: " + now.toLocaleTimeString();
+            document.getElementById('statusUpdate').innerText = "Zaktualizowano: " + new Date().toLocaleTimeString();
+            filter();
         } catch (e) {
-            grid.innerHTML = "<p style='color:red'>Błąd połączenia. Sprawdź Server ID.</p>";
+            document.getElementById('count').innerText = "Błąd pobierania danych.";
         }
     }
 
-    // Funkcja filtrująca "w locie"
-    function filterPlayers() {
-        const idVal = document.getElementById('searchId').value;
-        const nickVal = document.getElementById('searchNick').value.toLowerCase();
-        const grid = document.getElementById('playerGrid');
-        const countBox = document.getElementById('count');
+    function filter() {
+        const idVal = document.getElementById('inputId').value;
+        const nickVal = document.getElementById('inputNick').value.toLowerCase();
+        const grid = document.getElementById('grid');
+        const count = document.getElementById('count');
 
-        const filtered = allPlayers.filter(p => {
-            const matchId = idVal ? p.id == idVal : true;
-            const matchNick = nickVal ? p.name.toLowerCase().includes(nickNick) : true;
-            
-            // Logika: Jeśli oba pola puste - pokazuj wszystkich. 
-            // Jeśli wpisane ID - filtruj po ID. Jeśli wpisany Nick - filtruj po Nicku.
-            const nMatch = p.name.toLowerCase().includes(nickVal);
-            const iMatch = idVal ? (p.id.toString().startsWith(idVal)) : true;
-            
-            return nMatch && iMatch;
+        const filtered = players.filter(p => {
+            const mId = idVal ? p.id.toString().includes(idVal) : true;
+            const mNick = nickVal ? p.name.toLowerCase().includes(nickVal) : true;
+            return mId && mNick;
         });
 
-        countBox.innerHTML = `Widocznych graczy: <strong style="color:white">${filtered.length}</strong> / ${allPlayers.length}`;
+        count.innerHTML = `Aktywni: <strong style="color:var(--accent)">${filtered.length}</strong> / ${players.length}`;
+
+        if (!isVisible) return; // Nie renderuj kafelków jeśli ukryte
 
         let html = "";
         filtered.forEach(p => {
             html += `
-                <div class="player-tile">
-                    <div class="id-box">${p.id}</div>
-                    <div class="name-box" title="${p.name}">${p.name}</div>
+                <div class="card">
+                    <div class="id-badge">${p.id}</div>
+                    <div class="name-label" title="${p.name}">${p.name}</div>
                 </div>`;
         });
-        
-        grid.innerHTML = html || "<p>Brak pasujących graczy online.</p>";
+        grid.innerHTML = html || "<p style='padding:20px'>Brak wyników dla podanych filtrów.</p>";
     }
 
-    // Załaduj dane przy starcie strony
-    loadData();
+    function toggleVisibility() {
+        const section = document.getElementById('playerSection');
+        const btn = document.getElementById('toggleList');
+        isVisible = !isVisible;
+
+        if (isVisible) {
+            section.classList.remove('hidden');
+            btn.classList.add('active');
+            btn.innerText = "Ukryj listę";
+            filter();
+        } else {
+            section.classList.add('hidden');
+            btn.classList.remove('active');
+            btn.innerText = "Pokaż listę";
+        }
+    }
+
+    // Auto-odświeżanie co 60 sekund
+    setInterval(updateData, 60000);
+    updateData();
 </script>
 
 </body>
