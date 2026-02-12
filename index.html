@@ -111,4 +111,85 @@
 
         .status-msg { text-align: center; color: #888; padding: 20px; font-style: italic; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <h1>GrandRP Finder</h1>
+    
+    <div class="search-section">
+        <div class="inputs">
+            <input type="text" id="srv" class="input-srv" value="8ml10v" placeholder="Srv ID">
+            <input type="number" id="pid" class="input-id" placeholder="Wpisz ID gracza...">
+        </div>
+        <div class="buttons">
+            <button class="btn-main" onclick="szukaj()">Szukaj Gracza</button>
+            <button class="btn-list" onclick="pokazWszystkich()">Lista Online</button>
+        </div>
+    </div>
+
+    <div id="results">
+        <div class="status-msg">Wpisz ID i kliknij szukaj, aby sprawdzić gracza.</div>
+    </div>
+</div>
+
+<script>
+    async function pobierzDane() {
+        const srv = document.getElementById('srv').value;
+        const resBox = document.getElementById('results');
+        try {
+            const r = await fetch(`https://corsproxy.io/?https://servers-frontend.fivem.net/api/servers/single/${srv}`);
+            const d = await r.json();
+            return d.Data.players;
+        } catch(e) {
+            resBox.innerHTML = "<div class='status-msg' style='color:#ff4e50'>Błąd! Sprawdź ID serwera lub spróbuj za chwilę.</div>";
+            return null;
+        }
+    }
+
+    async function szukaj() {
+        const id = document.getElementById('pid').value;
+        const resBox = document.getElementById('results');
+        if(!id) return alert("Wpisz ID gracza!");
+
+        resBox.innerHTML = "<div class='status-msg'>Szukanie...</div>";
+        const gracze = await pobierzDane();
+        if(!gracze) return;
+
+        const g = gracze.find(x => x.id == id);
+        if(g) {
+            resBox.innerHTML = `
+                <div class="player-card">
+                    <span class="p-id">ID: ${g.id}</span>
+                    <span class="p-name">${g.name}</span>
+                </div>`;
+        } else {
+            resBox.innerHTML = "<div class='status-msg'>Gracza nie ma na serwerze.</div>";
+        }
+    }
+
+    async function pokazWszystkich() {
+        const resBox = document.getElementById('results');
+        resBox.innerHTML = "<div class='status-msg'>Ładowanie listy...</div>";
+        
+        const gracze = await pobierzDane();
+        if(!gracze) return;
+
+        gracze.sort((a,b) => a.id - b.id);
+        
+        let html = `<div class='status-msg'>Graczy online: ${gracze.length}</div>`;
+        gracze.forEach(g => {
+            html += `
+                <div class="player-card">
+                    <span class="p-id">[${g.id}]</span>
+                    <span class="p-name">${g.name}</span>
+                </div>`;
+        });
+        resBox.innerHTML = html;
+    }
+</script>
+
+</body>
+</html>
