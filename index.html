@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GrandRP Finder</title>
+    <title>GrandRP Finder | by kejcpi</title>
     <style>
         :root {
-            --bg: #050505;             /* Totalna czerń */
-            --card-bg: #0a0a0a;        /* Prawie czerń */
-            --neon: #b026ff;           /* Neonowy fiolet */
-            --neon-glow: rgba(176, 38, 255, 0.4); /* Poświata */
+            --bg: #050505;
+            --panel: #0f0f0f;
+            --accent: #00ffcc; /* Ostry Cyjan/Mięta */
+            --accent-dim: rgba(0, 255, 204, 0.1);
             --text: #ffffff;
+            --border: #333;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,39 +29,60 @@
 
         .wrapper {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1300px;
         }
 
-        /* NAGŁÓWEK */
+        /* --- NAGŁÓWEK Z PODPISEM --- */
         header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            padding-top: 20px;
         }
 
         h1 {
-            font-size: 2.2rem;
+            font-size: 3rem;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 4px;
-            color: #fff;
-            text-shadow: 0 0 15px var(--neon-glow);
-            margin-bottom: 20px;
+            letter-spacing: 2px;
+            margin: 0;
+            /* Gradientowy, metaliczny kolor tekstu */
+            background: linear-gradient(to bottom, #ffffff, #888888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* Brak rozmazanego cienia */
         }
 
-        /* MINI PLAYER WIDEO */
+        .signature {
+            font-size: 1rem;
+            color: var(--accent);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-top: 5px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .signature::before, .signature::after {
+            content: "—";
+            color: #444;
+            margin: 0 10px;
+        }
+
+        /* --- MINI PLAYER (BEZ ROZMYCIA) --- */
         .video-box {
             width: 100%;
-            max-width: 400px; /* Zmniejszony rozmiar */
-            margin: 0 auto 30px; /* Wyśrodkowanie */
-            border: 2px solid var(--neon);
-            border-radius: 15px;
+            max-width: 400px;
+            margin: 0 auto 30px;
+            border: 2px solid var(--border); /* Ostra ramka */
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 0 20px var(--neon-glow);
-            position: relative;
+            background: #000;
         }
 
         .video-wrapper {
             position: relative;
-            padding-bottom: 56.25%; /* 16:9 ratio */
+            padding-bottom: 56.25%;
             height: 0;
         }
 
@@ -73,133 +95,148 @@
             border: none;
         }
 
-        /* PANEL STEROWANIA */
+        /* --- PANEL STEROWANIA --- */
         .controls {
+            background: var(--panel);
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 20px;
+            gap: 15px;
+            align-items: flex-end;
+            margin-bottom: 20px;
         }
 
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            min-width: 200px;
+            gap: 5px;
+            flex: 1;
+            min-width: 180px;
         }
 
         label {
-            font-size: 0.8rem;
-            color: var(--neon);
+            font-size: 0.75rem;
+            color: var(--accent);
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: 0 0 5px var(--neon-glow);
         }
 
-        /* NEONOWE INPUTY */
-        input {
-            background: #000;
-            border: 1px solid var(--neon);
+        /* INPUTY I SELECT */
+        input, select {
+            background: #080808;
+            border: 1px solid var(--border);
             color: white;
-            padding: 12px 15px;
-            border-radius: 8px;
+            padding: 12px;
+            border-radius: 4px; /* Bardziej kwadratowe */
             outline: none;
-            transition: 0.3s;
-            box-shadow: 0 0 8px rgba(176, 38, 255, 0.2);
             font-size: 1rem;
+            transition: 0.2s;
         }
 
-        input:focus {
-            box-shadow: 0 0 20px var(--neon-glow);
-            background: #0e0e0e;
+        input:focus, select:focus {
+            border-color: var(--accent);
         }
 
-        /* NEONOWE PRZYCISKI */
+        /* PRZYCISKI */
         button {
             padding: 12px 25px;
-            border: 1px solid var(--neon);
-            background: transparent;
-            color: var(--neon);
-            border-radius: 8px;
+            border: none;
             cursor: pointer;
             font-weight: bold;
             text-transform: uppercase;
-            transition: 0.3s;
-            height: 48px;
-            margin-top: auto;
-            box-shadow: 0 0 10px rgba(176, 38, 255, 0.1);
-        }
-
-        button:hover {
-            background: var(--neon);
-            color: #000;
-            box-shadow: 0 0 25px var(--neon);
-        }
-
-        button.active {
-            background: var(--neon);
-            color: #000;
-            box-shadow: 0 0 25px var(--neon);
-        }
-
-        /* STATYSTYKI */
-        .stats {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #888;
             font-size: 0.9rem;
+            border-radius: 4px;
+            height: 44px;
+            transition: 0.2s;
         }
 
-        /* GRID Z KAFELKAMI */
+        /* Przycisk ODŚWIEŻ w BOXIE */
+        .btn-refresh {
+            background: var(--accent);
+            color: #000; /* Czarny tekst dla kontrastu */
+            border: 1px solid var(--accent);
+            min-width: 120px;
+        }
+
+        .btn-refresh:hover {
+            background: #fff;
+            border-color: #fff;
+        }
+
+        .btn-toggle {
+            background: transparent;
+            color: #888;
+            border: 1px solid var(--border);
+        }
+        
+        .btn-toggle.active {
+            background: #222;
+            color: #fff;
+            border-color: #555;
+        }
+
+        /* --- STATYSTYKI --- */
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+
+        /* --- GRID (KAFELKI) --- */
         #grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            width: 100%;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
         }
 
         .card {
-            background: var(--card-bg);
-            border: 1px solid #222; /* Domyślnie ciemna ramka */
+            background: var(--panel);
+            border: 1px solid var(--border); /* Cienka, ostra ramka */
             padding: 15px;
-            border-radius: 10px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
-            transition: 0.3s;
+            transition: 0.2s;
         }
 
-        /* Efekt najechania na kafelek */
         .card:hover {
-            border-color: var(--neon);
-            box-shadow: 0 0 15px var(--neon-glow);
-            transform: translateY(-5px);
+            border-color: var(--accent);
+            background: #121212;
         }
 
-        .id-txt {
-            color: var(--neon);
+        /* ID W BOXIE */
+        .id-box {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid var(--accent); /* Ostra ramka */
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
+            padding: 5px 10px;
+            border-radius: 4px;
             margin-right: 15px;
-            text-shadow: 0 0 5px var(--neon-glow);
-            min-width: 50px;
+            min-width: 60px;
+            text-align: center;
+            font-family: monospace;
         }
 
         .nick-txt {
-            color: #fff;
+            color: #e0e0e0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-weight: 500;
         }
 
         .hidden { display: none; }
-        
-        @media (max-width: 768px) {
+
+        @media (max-width: 800px) {
             .controls { flex-direction: column; align-items: stretch; }
+            h1 { font-size: 2.2rem; }
         }
     </style>
 </head>
@@ -209,6 +246,7 @@
 
     <header>
         <h1>GrandRP Finder</h1>
+        <div class="signature">by kejcpi</div>
     </header>
 
     <div class="video-box">
@@ -219,26 +257,30 @@
 
     <div class="controls">
         <div class="input-group">
-            <label>Server ID</label>
-            <input type="text" id="srv" value="8rml8v">
+            <label>Wybierz Serwer</label>
+            <select id="serverSelect" onchange="getData()">
+                <option value="8rml8v" selected>GrandRP (PL)</option>
+                <option value="dyrx5y">BetterSide</option>
+            </select>
         </div>
+
         <div class="input-group">
             <label>Szukaj ID</label>
             <input type="number" id="sid" placeholder="np. 123" oninput="render()">
         </div>
+
         <div class="input-group">
             <label>Szukaj Nicku</label>
             <input type="text" id="snick" placeholder="np. cwel" oninput="render()">
         </div>
         
-        <div style="display:flex; gap:10px; margin-top: auto;">
-            <button onclick="getData()">Odśwież</button>
-            <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
-        </div>
+        <button class="btn-refresh" onclick="getData()">ODŚWIEŻ</button>
+        <button id="btnToggle" class="btn-toggle active" onclick="toggleList()">Ukryj listę</button>
     </div>
 
-    <div class="stats">
-        <span id="counter">Ładowanie danych...</span> | <span id="time"></span>
+    <div class="stats-bar">
+        <span id="counter">Ładowanie...</span>
+        <span id="time"></span>
     </div>
 
     <div id="grid"></div>
@@ -250,8 +292,9 @@
     let showList = true;
 
     async function getData() {
-        const sID = document.getElementById('srv').value;
-        const btn = document.querySelector('button'); // Pierwszy przycisk to odśwież
+        // Pobieramy ID z listy rozwijanej
+        const sID = document.getElementById('serverSelect').value;
+        const btn = document.querySelector('.btn-refresh');
         
         btn.innerText = "...";
         
@@ -265,7 +308,9 @@
             document.getElementById('time').innerText = "Aktualizacja: " + new Date().toLocaleTimeString();
             render();
         } catch(e) {
-            document.getElementById('counter').innerText = "Błąd serwera / złe ID.";
+            document.getElementById('counter').innerText = "Błąd połączenia / Serwer offline.";
+            players = [];
+            render();
         }
         btn.innerText = "ODŚWIEŻ";
     }
@@ -282,7 +327,7 @@
             return mId && mNick;
         });
 
-        counter.innerHTML = `Online: <strong style="color:var(--neon)">${filtered.length}</strong> / ${players.length}`;
+        counter.innerHTML = `Online: <strong style="color:var(--accent)">${filtered.length}</strong> / ${players.length}`;
 
         if(!showList) {
             grid.innerHTML = "";
@@ -293,12 +338,12 @@
         filtered.forEach(p => {
             html += `
                 <div class="card">
-                    <span class="id-txt">${p.id}</span>
+                    <div class="id-box">${p.id}</div>
                     <span class="nick-txt" title="${p.name}">${p.name}</span>
                 </div>
             `;
         });
-        grid.innerHTML = html;
+        grid.innerHTML = html || "<div style='color:#555; padding:10px;'>Brak wyników.</div>";
     }
 
     function toggleList() {
@@ -306,10 +351,10 @@
         const btn = document.getElementById('btnToggle');
         
         if(showList) {
-            btn.innerText = "UKRYJ LISTĘ";
+            btn.innerText = "Ukryj listę";
             btn.classList.add('active');
         } else {
-            btn.innerText = "POKAŻ LISTĘ";
+            btn.innerText = "Pokaż listę";
             btn.classList.remove('active');
         }
         render();
