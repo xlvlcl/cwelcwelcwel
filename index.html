@@ -5,27 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GrandRP Finder | by kejcpi</title>
     <style>
-        /* --- PALETA KOLORÓW --- */
         :root {
             --bg: #050505;             
-            --panel: #0a0a0a;          
-            
-            /* DOMYŚLNY MOTYW: ELECTRIC BLUE */
+            --panel: rgba(10, 10, 10, 0.85);          
             --theme: #0055FF;          
-            --theme-glow: rgba(0, 85, 255, 0.5);
-            
-            --header-gray: #e6e6e6;    
-            --header-glow: rgba(255, 255, 255, 0.3);
-
+            --theme-glow: rgba(0, 85, 255, 0.4);
             --text: #ffffff;
             --text-dim: #888;
-            --border: #333;
+            --status-ok: #00ff88;
+            --status-err: #ff3333;
         }
-
-        /* USUNIĘCIE STRZAŁEK W POLACH NUMERYCZNYCH */
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -38,272 +27,96 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden; 
+            overflow-x: hidden;
         }
 
-        /* --- TŁO (AURORA + GRID) --- */
+        /* --- TŁO (MESH GRADIENT) --- */
         .background-fx {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
-            pointer-events: none;
-            overflow: hidden;
+            background: 
+                radial-gradient(at 0% 0%, var(--theme-glow) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, var(--theme-glow) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(0,0,0,1) 0px, transparent 100%);
+            background-attachment: fixed;
         }
 
-        .bg-gradient {
-            position: absolute;
-            width: 150%; height: 150%;
-            top: -25%; left: -25%;
-            background: radial-gradient(circle at 50% 50%, var(--theme-glow), transparent 40%),
-                        radial-gradient(circle at 20% 80%, var(--theme-glow), transparent 40%);
-            filter: blur(120px);
-            opacity: 0.25; 
-            animation: floatBg 15s infinite alternate ease-in-out;
-        }
+        .wrapper { width: 100%; max-width: 1300px; position: relative; min-height: 90vh; }
 
-        .bg-grid {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
-            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        /* --- SYSTEM STATUS (LEWY GÓRNY RÓG) --- */
+        .system-status {
+            position: absolute; top: 0; left: 0;
+            display: flex; flex-direction: column; gap: 8px;
+            padding: 10px 15px; background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; z-index: 200;
         }
+        .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.5px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); }
+        .dot.online { background: var(--status-ok); box-shadow: 0 0 8px var(--status-ok); }
+        .dot.offline { background: var(--status-err); box-shadow: 0 0 8px var(--status-err); }
+        .status-label { color: #ccc; text-transform: uppercase; }
 
-        @keyframes floatBg {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(-20px, 20px) rotate(5deg); }
-        }
-
-        .wrapper { 
-            width: 100%; max-width: 1300px; position: relative; 
-        }
-
-        /* --- PANEL ZMIANY KOLORU --- */
+        /* PANEL MOTYWU */
         .theme-panel {
-            position: absolute;
-            top: 0;
-            right: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 15px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px); 
-            border: 1px solid var(--theme);
-            border-radius: 8px;
-            box-shadow: 0 0 15px var(--theme-glow);
+            position: absolute; top: 0; right: 0;
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 15px; background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px); border: 1px solid var(--theme);
+            border-radius: 8px; box-shadow: 0 0 15px var(--theme-glow);
             z-index: 200;
         }
+        .color-preview { width: 25px; height: 25px; border-radius: 4px; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; }
+        #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
 
-        .theme-label {
-            font-size: 0.8rem; font-weight: bold; color: var(--theme);
-            text-transform: uppercase; letter-spacing: 1px;
-            text-shadow: 0 0 5px var(--theme-glow);
-        }
+        header { text-align: center; margin-bottom: 30px; padding-top: 60px; }
+        h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .signature { font-size: 1rem; color: var(--theme); letter-spacing: 5px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 10px var(--theme-glow); }
 
-        .color-preview {
-            width: 25px; height: 25px;
-            border-radius: 4px; border: 2px solid #fff;
-            background-color: var(--theme);
-            position: relative; cursor: pointer;
-            box-shadow: 0 0 8px var(--theme);
-            overflow: hidden;
-        }
-
-        #themePicker {
-            position: absolute; top: -10px; left: -10px;
-            width: 50px; height: 50px; opacity: 0; cursor: pointer;
-        }
-
-        /* --- NAGŁÓWEK --- */
-        header { 
-            text-align: center; margin-bottom: 30px; 
-            padding-top: 40px; position: relative; z-index: 10;
-        }
-
-        h1 {
-            font-size: 3rem; font-weight: 900;
-            text-transform: uppercase; letter-spacing: 3px; margin: 0;
-            background: linear-gradient(to bottom, #ffffff 40%, #999 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px var(--header-glow));
-        }
-
-        .signature {
-            font-size: 1rem; color: var(--theme);
-            letter-spacing: 5px; text-transform: uppercase;
-            font-weight: bold; margin-top: 5px;
-            position: relative; display: inline-block;
-            text-shadow: 0 0 10px var(--theme-glow);
-            transition: color 0.3s;
-        }
-        .signature::before, .signature::after { content: "—"; color: #444; margin: 0 10px; }
-
-        /* --- VIDEO --- */
-        .video-box {
-            width: 100%; max-width: 400px; margin: 0 auto 30px;
-            border: 2px solid var(--theme); border-radius: 15px;
-            overflow: hidden; background: #000;
-            box-shadow: 0 0 30px var(--theme-glow); 
-            position: relative; z-index: 20;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
-        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-
-        /* --- PANEL STEROWANIA --- */
-        .controls {
-            background: rgba(10, 10, 10, 0.7); 
-            backdrop-filter: blur(10px);       
-            padding: 25px;
-            border-radius: 20px; display: flex; flex-wrap: wrap; gap: 20px;
-            align-items: flex-start; margin-bottom: 20px;
-            justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative; z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .input-group {
-            display: flex; flex-direction: column; gap: 8px;
-            flex: 1; min-width: 180px;
-        }
-
-        label {
-            font-size: 0.75rem; color: var(--theme);
-            font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
-            text-shadow: 0 0 5px var(--theme-glow);
-            transition: color 0.3s;
-        }
-
-        input, select {
-            background: rgba(0,0,0,0.6); 
-            border: 1px solid var(--theme);
-            color: white; padding: 14px; border-radius: 10px;
-            outline: none; font-size: 1rem; transition: 0.3s;
-            width: 100%;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.05);
-            position: relative; z-index: 101;
-        }
+        .controls { background: var(--panel); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
+        label { font-size: 0.7rem; color: var(--theme); font-weight: bold; text-transform: uppercase; margin-left: 5px; }
+        input, select { background: rgba(0,0,0,0.6); border: 1px solid var(--theme); color: white; padding: 14px; border-radius: 10px; outline: none; transition: 0.3s; }
         
-        input:focus, select:focus {
-            border-color: var(--theme);
-            box-shadow: 0 0 15px var(--theme-glow);
-            background: #000;
-        }
+        button { padding: 12px 30px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); color: var(--theme); border-radius: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; height: 48px; }
+        button:hover, button.active { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
 
-        /* --- PRZYCISKI --- */
-        .btn-group {
-            display: flex; gap: 15px; align-items: flex-end; height: 100%; padding-top: 22px;
-        }
+        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; width: 100%; margin-bottom: 50px; }
+        .card { background: var(--panel); backdrop-filter: blur(5px); border: 1px solid #222; padding: 15px; border-radius: 10px; display: flex; align-items: center; transition: 0.3s; position: relative; }
+        .card:hover { border-color: var(--theme); transform: translateY(-3px); box-shadow: 0 0 15px var(--theme-glow); }
+        .ping-badge { position: absolute; top: 5px; right: 8px; font-size: 0.75rem; font-family: monospace; font-weight: bold; color: var(--theme); opacity: 0.9; }
+        .id-box { color: var(--theme); border: 1px solid var(--theme); font-weight: bold; padding: 5px 10px; border-radius: 6px; margin-right: 15px; font-family: monospace; }
 
-        button {
-            padding: 12px 30px; background: rgba(0,0,0,0.4);
-            border: 1px solid var(--theme); color: var(--theme);
-            border-radius: 10px; cursor: pointer; font-weight: bold;
-            text-transform: uppercase; font-size: 0.9rem; height: 48px;
-            transition: 0.3s; min-width: 130px;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
-            position: relative; z-index: 101;
-        }
+        footer { width: 100%; max-width: 1300px; margin-top: 40px; padding: 30px 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; align-items: center; gap: 15px; color: var(--text-dim); }
+        .footer-links { display: flex; gap: 25px; flex-wrap: wrap; justify-content: center; }
+        .footer-links a { color: var(--text-dim); text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+        .footer-links a:hover { color: var(--theme); text-shadow: 0 0 10px var(--theme-glow); }
 
-        button:hover, button.active {
-            background: var(--theme); color: #000;
-            box-shadow: 0 0 25px var(--theme);
-        }
-
-        /* --- STATYSTYKI --- */
-        .stats-bar {
-            display: flex; justify-content: center; align-items: center;    
-            position: relative; margin-bottom: 25px; 
-            padding: 0 10px; width: 100%; height: 40px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-        }
-
-        #counter {
-            font-size: 1.8rem; color: #fff;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        
-        #counter strong {
-            color: var(--theme);
-            text-shadow: 0 0 15px var(--theme);
-            transition: color 0.3s;
-        }
-
-        #time {
-            position: absolute; right: 0;
-            font-size: 0.8rem; color: var(--text-dim);
-            font-family: monospace;
-        }
-
-        /* --- GRID --- */
-        #grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 15px; width: 100%;
-        }
-
-        .card {
-            background: rgba(10, 10, 10, 0.8); 
-            backdrop-filter: blur(5px);
-            border: 1px solid #222; 
-            padding: 15px; border-radius: 10px; display: flex; align-items: center;
-            transition: 0.3s; position: relative;
-        }
-        
-        .card:hover {
-            border-color: var(--theme); background: #111;
-            transform: translateY(-3px); box-shadow: 0 0 15px var(--theme-glow);
-        }
-
-        /* STYL PINGU (TERAZ ZALEŻNY OD MOTYWU) */
-        .ping-badge {
-            position: absolute;
-            top: 5px; right: 8px;
-            font-size: 0.75rem; font-family: monospace;
-            font-weight: bold; 
-            color: var(--theme); /* Zmieniono na stały kolor motywu */
-            opacity: 0.9;
-            text-shadow: 0 0 5px var(--theme-glow);
-            transition: color 0.3s;
-        }
-
-        .id-box {
-            color: var(--theme); 
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--theme);
-            font-weight: bold; font-size: 1.1rem; padding: 5px 10px;
-            border-radius: 6px; margin-right: 15px; min-width: 60px;
-            text-align: center; font-family: monospace;
-            box-shadow: 0 0 5px var(--theme-glow);
-            transition: color 0.3s, border-color 0.3s;
-        }
-
-        .nick-txt {
-            color: #e0e0e0; white-space: nowrap;
-            overflow: hidden; text-overflow: ellipsis; font-weight: 500;
-        }
-
-        .hidden-input { display: none; margin-top: 10px; border-color: var(--theme); }
-        .hidden-list { display: none !important; }
+        .hidden-input { display: none; }
     </style>
 </head>
 <body>
 
-<div class="background-fx">
-    <div class="bg-gradient"></div>
-    <div class="bg-grid"></div>
-</div>
+<div class="background-fx" id="bgLayer"></div>
 
 <div class="wrapper">
+    <div class="system-status">
+        <div class="status-item">
+            <div id="fivem-dot" class="dot"></div>
+            <span class="status-label">FiveM:</span>
+            <span id="fivem-text">CHECKING</span>
+        </div>
+        <div class="status-item">
+            <div id="steam-dot" class="dot"></div>
+            <span class="status-label">Steam:</span>
+            <span id="steam-text">CHECKING</span>
+        </div>
+    </div>
+
     <div class="theme-panel">
         <span class="theme-label">MOTYW:</span>
-        <div class="color-preview">
-            <input type="color" id="themePicker" value="#0055FF">
-        </div>
+        <div class="color-preview"><input type="color" id="themePicker" value="#0055FF"></div>
     </div>
 
     <header>
@@ -311,189 +124,133 @@
         <div class="signature">by kejcpi</div>
     </header>
 
-    <div class="video-box">
-        <div class="video-wrapper">
-            <iframe src="https://www.youtube.com/embed/4DIcijdahZE?autoplay=1&mute=1&loop=1&playlist=4DIcijdahZE" allow="autoplay" allowfullscreen></iframe>
-        </div>
-    </div>
-
     <div class="controls">
         <div class="input-group">
-            <label>Wybierz Serwer</label>
+            <label>Serwer</label>
             <select id="serverSelect" onchange="checkCustomServer()">
                 <option value="8rml8v" selected>GrandRP (PL)</option>
                 <option value="dyrx5y">BetterSide</option>
-                <option value="custom" style="font-weight:bold;">-- Wpisz własne ID --</option>
+                <option value="custom">-- Własne ID --</option>
             </select>
-            <input type="text" id="customSrv" class="hidden-input" placeholder="np. 6y6m6y" onchange="manualRefresh()">
+            <input type="text" id="customSrv" class="hidden-input" placeholder="Wpisz ID serwera">
         </div>
-
-        <div class="input-group">
-            <label>Szukaj ID</label>
-            <input type="number" id="sid" placeholder="np. 123" oninput="render()">
-        </div>
-
-        <div class="input-group">
-            <label>Szukaj Nicku</label>
-            <input type="text" id="snick" placeholder="np. cwel" oninput="render()">
-        </div>
-        
-        <div class="btn-group">
+        <div class="input-group"><label>Szukaj ID</label><input type="number" id="sid" placeholder="np. 123" oninput="render()"></div>
+        <div class="input-group"><label>Szukaj Nicku</label><input type="text" id="snick" placeholder="np. kejcpi" oninput="render()"></div>
+        <div class="btn-group" style="padding-top: 19px;">
             <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
-            <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
         </div>
-    </div>
-
-    <div class="stats-bar">
-        <span id="counter">Ładowanie...</span>
-        <span id="time"></span>
     </div>
 
     <div id="grid"></div>
+
+    <footer>
+        <div class="footer-links">
+            <a href="https://gta5grand.com/" target="_blank">Oficjalna Strona</a>
+            <a href="https://gta5grand.com/forum/" target="_blank">Forum Serwera</a>
+            <a href="https://discord.gg/grandrp" target="_blank">Discord Grand</a>
+        </div>
+        <div style="font-size: 0.8rem; opacity: 0.6; margin-top: 10px;">
+            © 2024 GrandRP Finder | Created by <strong style="color:var(--theme)">kejcpi</strong>
+        </div>
+    </footer>
 </div>
 
 <script>
     let players = [];
-    let showList = true;
 
     function setTheme(color) {
         document.documentElement.style.setProperty('--theme', color);
         document.documentElement.style.setProperty('--theme-glow', color + '66');
-        
-        const picker = document.getElementById('themePicker');
-        const preview = document.querySelector('.color-preview');
-        if(preview) preview.style.backgroundColor = color;
-        if(picker) picker.value = color;
-        
+        document.querySelector('.color-preview').style.backgroundColor = color;
         localStorage.setItem('grandrp_theme', color);
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        const picker = document.getElementById('themePicker');
-        if (picker) {
-            picker.addEventListener('input', (e) => {
-                setTheme(e.target.value);
-            });
-        }
+    document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
 
-        const savedColor = localStorage.getItem('grandrp_theme');
-        if (savedColor) {
-            setTheme(savedColor);
-        } else {
-            setTheme('#0055FF'); 
-        }
+    // FUNKCJA SPRAWDZAJĄCA STATUS USŁUG
+    async function checkSystemStatus() {
+        const services = [
+            { id: 'fivem', url: 'https://servers-frontend.fivem.net/api/servers/single/8rml8v' },
+            { id: 'steam', url: 'https://store.steampowered.com/api/storesearch' }
+        ];
 
-        getData(false);
+        services.forEach(async (service) => {
+            const dot = document.getElementById(`${service.id}-dot`);
+            const text = document.getElementById(`${service.id}-text`);
+            
+            try {
+                // Wykorzystujemy proxy żeby uniknąć CORS i sprawdzić czy domeny odpowiadają
+                const response = await fetch(`https://corsproxy.io/?${service.url}`, { method: 'HEAD' });
+                if (response.ok) {
+                    dot.className = 'dot online';
+                    text.innerText = 'ONLINE';
+                    text.style.color = 'var(--status-ok)';
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                dot.className = 'dot offline';
+                text.innerText = 'BŁĄD';
+                text.style.color = 'var(--status-err)';
+            }
+        });
+    }
 
-        setInterval(() => {
-            getData(true);
-        }, 15000);
-    });
-
-    async function getData(isAuto = false) {
+    async function getData() {
         let sID = document.getElementById('serverSelect').value;
-        const customInput = document.getElementById('customSrv');
-
-        if (sID === 'custom') {
-            if(customInput) sID = customInput.value;
-            if (!sID || sID.length < 3) return; 
-        }
+        if (sID === 'custom') sID = document.getElementById('customSrv').value;
+        if (!sID) return;
 
         const btn = document.getElementById('refreshBtn');
-        const timeSpan = document.getElementById('time');
-        
-        if (!isAuto && btn) btn.innerText = "...";
-        
+        btn.innerText = "...";
+
         try {
             const res = await fetch(`https://corsproxy.io/?https://servers-frontend.fivem.net/api/servers/single/${sID}?t=${Date.now()}`);
             const data = await res.json();
-            
-            if (data && data.Data && data.Data.players) {
+            if (data?.Data?.players) {
                 players = data.Data.players;
                 players.sort((a,b) => a.id - b.id);
-                
-                const now = new Date();
-                if(timeSpan) timeSpan.innerText = "Aktualizacja: " + now.toLocaleTimeString();
                 render();
             }
-        } catch(e) {
-            console.error(e);
-            if (!isAuto) alert("Błąd! Nie znaleziono serwera.");
-        }
-
-        if (!isAuto && btn) btn.innerText = "ODŚWIEŻ";
-    }
-
-    function manualRefresh() {
-        getData(false);
-    }
-
-    function checkCustomServer() {
-        const select = document.getElementById('serverSelect');
-        const customInput = document.getElementById('customSrv');
-        
-        if (select.value === 'custom') {
-            customInput.style.display = 'block';
-            customInput.focus();
-        } else {
-            customInput.style.display = 'none';
-            manualRefresh();
-        }
+        } catch(e) { console.error("Błąd pobierania"); }
+        btn.innerText = "ODŚWIEŻ";
     }
 
     function render() {
         const idVal = document.getElementById('sid').value;
         const nickVal = document.getElementById('snick').value.toLowerCase();
         const grid = document.getElementById('grid');
-        const counter = document.getElementById('counter');
 
-        if(!grid || !counter) return;
+        const filtered = players.filter(p => 
+            (idVal ? p.id.toString().startsWith(idVal) : true) &&
+            (nickVal ? p.name.toLowerCase().includes(nickVal) : true)
+        );
 
-        const filtered = players.filter(p => {
-            const mId = idVal ? p.id.toString().startsWith(idVal) : true;
-            const mNick = nickVal ? p.name.toLowerCase().includes(nickVal) : true;
-            return mId && mNick;
-        });
-
-        counter.innerHTML = `Online: <strong>${filtered.length}</strong>`;
-
-        if (!showList) {
-            grid.innerHTML = "";
-            return;
-        }
-
-        let html = "";
-        filtered.forEach(p => {
-            const ping = p.ping !== undefined ? p.ping : Math.floor(Math.random() * 50) + 15;
-            
-            html += `
-                <div class="card">
-                    <div class="ping-badge">${ping}ms</div>
-                    <div class="id-box">${p.id}</div>
-                    <span class="nick-txt" title="${p.name}">${p.name}</span>
-                </div>
-            `;
-        });
-        grid.innerHTML = html || "<div style='color:#ccc; padding:10px; grid-column:1/-1; text-align:center;'>Brak wyników.</div>";
+        grid.innerHTML = filtered.map(p => `
+            <div class="card">
+                <div class="ping-badge">${p.ping || 20}ms</div>
+                <div class="id-box">${p.id}</div>
+                <div class="nick-txt">${p.name}</div>
+            </div>
+        `).join('');
     }
 
-    function toggleList() {
-        showList = !showList;
-        const btn = document.getElementById('btnToggle');
-        
-        if (showList) {
-            if(btn) {
-                btn.innerText = "Ukryj listę";
-                btn.classList.add('active');
-            }
-        } else {
-            if(btn) {
-                btn.innerText = "Pokaż listę";
-                btn.classList.remove('active');
-            }
-        }
-        render();
+    function checkCustomServer() {
+        document.getElementById('customSrv').style.display = document.getElementById('serverSelect').value === 'custom' ? 'block' : 'none';
+        getData();
     }
+
+    function manualRefresh() { getData(); checkSystemStatus(); }
+
+    // Init
+    const saved = localStorage.getItem('grandrp_theme');
+    if(saved) setTheme(saved);
+    
+    checkSystemStatus();
+    getData();
+    
+    setInterval(getData, 30000);
+    setInterval(checkSystemStatus, 60000);
 </script>
 
 </body>
