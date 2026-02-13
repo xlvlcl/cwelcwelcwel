@@ -69,9 +69,21 @@
         .color-preview { width: 25px; height: 25px; border-radius: 4px; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
 
-        /* --- NAGŁÓWEK --- */
+        /* --- NAGŁÓWEK (Z NEONOWYM PULSEM) --- */
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
-        h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; transition: 0.5s; }
+        h1 { 
+            font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; 
+            background: linear-gradient(to bottom, #fff 40%, #999 100%); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            margin-bottom: 5px; transition: 0.5s;
+            filter: drop-shadow(0 0 5px var(--theme-glow));
+            animation: neonPulse 3s infinite ease-in-out;
+        }
+        @keyframes neonPulse {
+            0%, 100% { filter: drop-shadow(0 0 5px var(--theme-glow)); }
+            50% { filter: drop-shadow(0 0 20px var(--theme)); }
+        }
+
         .signature { font-size: 1rem; color: var(--theme); letter-spacing: 5px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 10px var(--theme-glow); display: inline-block; position: relative; }
         .signature::before, .signature::after { content: "—"; color: #555; margin: 0 15px; }
 
@@ -92,7 +104,7 @@
         input, select { background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 14px; border-radius: 10px; outline: none; transition: 0.3s; }
         input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
         
-        /* --- SZKLANE PRZYCISKI (GLASSMORPHISM) --- */
+        /* SZKLANE PRZYCISKI */
         button { 
             padding: 12px 30px; 
             background: rgba(255, 255, 255, 0.05); 
@@ -107,7 +119,7 @@
             height: 48px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
-        button:hover, button.active { 
+        button:hover { 
             background: var(--theme); 
             color: #000; 
             box-shadow: 0 0 25px var(--theme); 
@@ -134,7 +146,6 @@
             opacity: 0;
             transform: translateY(10px);
         }
-
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
 
         .card:hover { border-color: var(--theme); transform: translateY(-3px); box-shadow: 0 0 15px var(--theme-glow); }
@@ -185,7 +196,7 @@
         <div class="input-group"><label>Szukaj Nicku</label><input type="text" id="snick" placeholder="np. cwel" oninput="render()"></div>
         <div class="btn-group" style="padding-top: 19px; display: flex; gap: 10px;">
             <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
-            <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
+            <button id="btnToggle" onclick="toggleList()">Ukryj listę</button>
         </div>
     </div>
 
@@ -223,7 +234,6 @@
         const title = document.getElementById('mainTitle');
         let sID = select.value;
         
-        // Dynamiczna zmiana nazwy nagłówka
         if(sID === '8rml8v') title.innerText = "GrandRP Finder";
         else if(sID === 'dyrx5y') title.innerText = "BetterSide Finder";
         else title.innerText = "Server Finder";
@@ -259,7 +269,7 @@
         if (!showList) { grid.innerHTML = ""; return; }
 
         grid.innerHTML = filtered.map((p, index) => `
-            <div class="card" style="animation-delay: ${Math.min(index * 0.015, 0.8)}s">
+            <div class="card" style="animation-delay: ${Math.min(index * 0.01, 0.5)}s">
                 <div class="ping-badge">${p.ping || 20}ms</div>
                 <div class="id-box">${p.id}</div>
                 <div class="nick-txt" title="${p.name}">${p.name}</div>
