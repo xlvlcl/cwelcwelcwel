@@ -42,7 +42,7 @@
 
         .wrapper { width: 100%; max-width: 1300px; position: relative; padding-bottom: 50px; }
 
-        /* --- SYSTEM STATUS (LEWY GÓRNY RÓG - PEŁNA INTEGRACJA) --- */
+        /* --- SYSTEM STATUS --- */
         .system-status {
             position: absolute; top: 0; left: 0;
             display: flex; flex-direction: column; gap: 8px;
@@ -54,12 +54,9 @@
             transition: border-color 0.3s, box-shadow 0.3s;
         }
         .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.5px; }
-        
-        /* Kropka statusu - reaguje na kolor motywu */
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
         .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
         .dot.offline { background: #333; box-shadow: none; opacity: 0.5; }
-
         .status-label { color: var(--theme); text-transform: uppercase; transition: color 0.3s; }
         .status-text { color: var(--text); transition: 0.3s; }
         .status-text.err { opacity: 0.5; }
@@ -76,9 +73,26 @@
         .color-preview { width: 25px; height: 25px; border-radius: 4px; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
 
-        header { text-align: center; margin-bottom: 30px; padding-top: 60px; }
-        h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .signature { font-size: 1rem; color: var(--theme); letter-spacing: 5px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 10px var(--theme-glow); }
+        /* --- NAGŁÓWEK (WYŻEJ) --- */
+        header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            padding-top: 20px; /* Zmniejszono padding, aby był wyżej */
+        }
+        h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
+        
+        /* PODPIS Z KRESKAMI */
+        .signature { 
+            font-size: 1rem; 
+            color: var(--theme); 
+            letter-spacing: 5px; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            text-shadow: 0 0 10px var(--theme-glow);
+            display: inline-block;
+            position: relative;
+        }
+        .signature::before, .signature::after { content: "—"; color: #555; margin: 0 15px; }
 
         /* VIDEO */
         .video-box {
@@ -179,7 +193,6 @@
 
     document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
 
-    // AKTUALIZACJA STATUSU - UŻYWA KOLORU MOTYWU
     async function checkSystemStatus() {
         const services = [
             { id: 'fivem', url: 'https://servers-frontend.fivem.net/api/servers/single/8rml8v' },
