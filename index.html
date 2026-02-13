@@ -44,21 +44,29 @@
 
         .wrapper { width: 100%; max-width: 1300px; position: relative; min-height: 90vh; }
 
-        /* --- SYSTEM STATUS (LEWY GÓRNY RÓG) --- */
+        /* --- SYSTEM STATUS (LEWY GÓRNY RÓG - INTERAKTYWNY) --- */
         .system-status {
             position: absolute; top: 0; left: 0;
             display: flex; flex-direction: column; gap: 8px;
             padding: 10px 15px; background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px); 
+            border: 1px solid var(--theme); /* Interaktywne obramowanie */
+            box-shadow: 0 0 10px var(--theme-glow); /* Interaktywny blask */
             border-radius: 8px; z-index: 200;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
         .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.5px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); }
         .dot.online { background: var(--status-ok); box-shadow: 0 0 8px var(--status-ok); }
         .dot.offline { background: var(--status-err); box-shadow: 0 0 8px var(--status-err); }
-        .status-label { color: #ccc; text-transform: uppercase; }
+        
+        .status-label { 
+            color: var(--theme); /* Interaktywny kolor etykiety */
+            text-transform: uppercase; 
+            transition: color 0.3s;
+        }
 
-        /* PANEL MOTYWU */
+        /* THEME PANEL */
         .theme-panel {
             position: absolute; top: 0; right: 0;
             display: flex; align-items: center; gap: 10px;
@@ -74,6 +82,19 @@
         h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .signature { font-size: 1rem; color: var(--theme); letter-spacing: 5px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 10px var(--theme-glow); }
 
+        /* --- VIDEO BOX --- */
+        .video-box {
+            width: 100%; max-width: 400px; margin: 0 auto 30px;
+            border: 2px solid var(--theme); border-radius: 15px;
+            overflow: hidden; background: #000;
+            box-shadow: 0 0 25px var(--theme-glow);
+            position: relative; z-index: 20;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+        /* CONTROLS */
         .controls { background: var(--panel); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; }
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
         label { font-size: 0.7rem; color: var(--theme); font-weight: bold; text-transform: uppercase; margin-left: 5px; }
@@ -124,6 +145,12 @@
         <div class="signature">by kejcpi</div>
     </header>
 
+    <div class="video-box">
+        <div class="video-wrapper">
+            <iframe src="https://www.youtube.com/embed/4DIcijdahZE?autoplay=1&mute=1&loop=1&playlist=4DIcijdahZE" allow="autoplay" allowfullscreen></iframe>
+        </div>
+    </div>
+
     <div class="controls">
         <div class="input-group">
             <label>Serwer</label>
@@ -167,7 +194,6 @@
 
     document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
 
-    // FUNKCJA SPRAWDZAJĄCA STATUS USŁUG
     async function checkSystemStatus() {
         const services = [
             { id: 'fivem', url: 'https://servers-frontend.fivem.net/api/servers/single/8rml8v' },
@@ -179,7 +205,6 @@
             const text = document.getElementById(`${service.id}-text`);
             
             try {
-                // Wykorzystujemy proxy żeby uniknąć CORS i sprawdzić czy domeny odpowiadają
                 const response = await fetch(`https://corsproxy.io/?${service.url}`, { method: 'HEAD' });
                 if (response.ok) {
                     dot.className = 'dot online';
@@ -242,7 +267,6 @@
 
     function manualRefresh() { getData(); checkSystemStatus(); }
 
-    // Init
     const saved = localStorage.getItem('grandrp_theme');
     if(saved) setTheme(saved);
     
