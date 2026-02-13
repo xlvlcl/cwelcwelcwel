@@ -7,7 +7,7 @@
     <style>
         :root {
             --bg: #050505;             
-            --panel: rgba(15, 15, 15, 0.85);          
+            --panel: rgba(10, 10, 10, 0.85);          
             --theme: #0055FF;          
             --theme-glow: rgba(0, 85, 255, 0.4);
             --text: #ffffff;
@@ -18,7 +18,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: var(--bg);
             color: var(--text);
             padding: 20px;
@@ -35,8 +35,8 @@
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
             background: 
-                radial-gradient(at 0% 0%, var(--theme-glow) 0px, transparent 60%),
-                radial-gradient(at 100% 100%, var(--theme-glow) 0px, transparent 60%),
+                radial-gradient(at 0% 0%, var(--theme-glow) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, var(--theme-glow) 0px, transparent 50%),
                 radial-gradient(at 50% 50%, rgba(0,0,0,1) 0px, transparent 100%);
             background-attachment: fixed;
         }
@@ -53,7 +53,7 @@
             box-shadow: 0 0 10px var(--theme-glow); 
             border-radius: 8px; z-index: 200;
         }
-        .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }
+        .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.5px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
         .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
         .status-label { color: var(--theme); text-transform: uppercase; }
@@ -78,7 +78,12 @@
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
             margin-bottom: 5px; transition: 0.5s;
         }
-        .signature { font-size: 1rem; color: var(--theme); letter-spacing: 5px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 10px var(--theme-glow); display: inline-block; position: relative; }
+        .signature { 
+            font-size: 1rem; color: var(--theme); letter-spacing: 5px; 
+            text-transform: uppercase; font-weight: bold; 
+            text-shadow: 0 0 10px var(--theme-glow);
+            display: inline-block; position: relative;
+        }
         .signature::before, .signature::after { content: "—"; color: #555; margin: 0 15px; }
 
         /* VIDEO */
@@ -92,90 +97,61 @@
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
         /* CONTROLS */
-        .controls { 
-            background: var(--panel); backdrop-filter: blur(10px); padding: 25px; 
-            border-radius: 12px; display: flex; flex-wrap: wrap; gap: 20px; 
-            justify-content: center; border: 1px solid #222; margin-bottom: 20px; 
-        }
+        .controls { background: var(--panel); backdrop-filter: blur(10px); padding: 25px; border-radius: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; }
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
         label { font-size: 0.7rem; color: var(--theme); font-weight: bold; text-transform: uppercase; margin-left: 5px; }
-        input, select { 
-            background: rgba(0,0,0,0.6); border: 1px solid #333; color: white; 
-            padding: 14px; border-radius: 8px; outline: none; transition: 0.3s; 
-        }
-        input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
+        input, select { background: rgba(0,0,0,0.6); border: 1px solid var(--theme); color: white; padding: 14px; border-radius: 10px; outline: none; transition: 0.3s; }
         
-        .btn-group button { 
-            padding: 12px 30px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); 
-            color: var(--theme); border-radius: 8px; cursor: pointer; font-weight: bold; 
-            text-transform: uppercase; transition: 0.3s; height: 48px;
-        }
-        .btn-group button:hover { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
+        button { padding: 12px 30px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); color: var(--theme); border-radius: 10px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; height: 48px; }
+        button:hover, button.active { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
 
+        /* STATYSTYKI */
         .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 25px 0; width: 100%; }
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
 
-        /* --- KAFELKI (POWRÓT DO LEPSZEGO STYLU, ALE CZYŚCIEJ) --- */
-        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; width: 100%; }
+        /* --- STARE, KLASYCZNE KAFELKI --- */
+        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; width: 100%; }
         
         .card { 
-            background: rgba(12, 12, 12, 0.85); 
+            background: var(--panel); 
             backdrop-filter: blur(5px); 
             border: 1px solid #222; 
-            border-left: 4px solid var(--theme); /* Pasek po lewej wraca! */
-            padding: 12px 18px; 
-            border-radius: 8px; 
+            padding: 15px; 
+            border-radius: 10px; 
             display: flex; 
             align-items: center; 
-            justify-content: space-between;
+            transition: 0.3s; 
             position: relative; 
-            transition: 0.2s ease-in-out;
             animation: fadeIn 0.4s ease forwards;
             opacity: 0;
             transform: translateY(10px);
         }
 
-        .card:hover { 
-            background: rgba(20, 20, 20, 0.95);
-            border-color: var(--theme); 
-            transform: translateY(-2px); 
-            box-shadow: 0 5px 15px var(--theme-glow); 
-        }
-
-        .card-info { display: flex; align-items: center; gap: 15px; overflow: hidden; }
-
-        /* Ping wyrównany po lewej */
-        .ping-box { text-align: center; line-height: 1.1; min-width: 30px; }
-        .ping-val { color: var(--text); font-weight: bold; font-size: 0.9rem; }
-        .ping-lbl { color: var(--theme); font-size: 0.6rem; font-weight: bold; text-transform: uppercase; }
-
-        /* Wyraźne ID w ciemnej pastylce */
-        .id-box { 
-            background: rgba(0, 0, 0, 0.6); 
-            color: var(--theme); 
-            border: 1px solid var(--theme-glow); 
-            font-weight: bold; 
-            padding: 4px 8px; 
-            border-radius: 6px; 
-            font-family: monospace; 
-            font-size: 1.05rem;
-        }
+        .card:hover { border-color: var(--theme); transform: translateY(-3px); box-shadow: 0 0 15px var(--theme-glow); }
+        
+        /* Ping z lewej */
+        .ping-badge { font-size: 0.75rem; font-family: monospace; font-weight: bold; color: var(--theme); opacity: 0.9; margin-right: 15px; }
+        
+        /* ID w środku */
+        .id-box { color: var(--theme); border: 1px solid var(--theme); font-weight: bold; padding: 5px 10px; border-radius: 6px; margin-right: 15px; font-family: monospace; }
         
         /* Nick */
-        .nick-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; font-weight: 600; font-size: 1.05rem; color: var(--text); }
+        .nick-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
 
-        /* Gwiazdka ulubionych (prawa strona) */
+        /* Gwiazdka w prawym górnym rogu */
         .fav-btn {
+            position: absolute; top: 8px; right: 10px;
             background: transparent !important; border: none !important;
-            color: #444 !important; font-size: 1.5rem; 
+            color: #444 !important; font-size: 1.2rem; 
             cursor: pointer; transition: 0.2s; padding: 0; 
-            box-shadow: none !important; height: auto;
+            box-shadow: none !important; height: auto; outline: none; line-height: 1;
         }
         .fav-btn:hover { color: var(--gold) !important; transform: scale(1.2) !important; }
         .fav-btn.active { color: var(--gold) !important; filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.5)); }
 
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+
         .hidden-input { display: none; }
     </style>
 </head>
@@ -190,7 +166,7 @@
     </div>
 
     <div class="theme-panel">
-        <span class="theme-label" style="font-size: 0.7rem; color: var(--text-dim); font-weight: bold;">KOLOR</span>
+        <span class="theme-label">MOTYW:</span>
         <div class="color-preview"><input type="color" id="themePicker" value="#0055FF"></div>
     </div>
 
@@ -217,9 +193,9 @@
         </div>
         <div class="input-group"><label>Szukaj ID</label><input type="number" id="sid" placeholder="np. 123" oninput="renderDebounced()"></div>
         <div class="input-group"><label>Szukaj Nicku</label><input type="text" id="snick" placeholder="np. cwel" oninput="renderDebounced()"></div>
-        <div class="btn-group" style="padding-top: 22px; display: flex; gap: 12px;">
-            <button id="refreshBtn" onclick="manualRefresh()">Odśwież</button>
-            <button id="btnToggle" onclick="toggleList()">Ukryj listę</button>
+        <div class="btn-group" style="padding-top: 19px; display: flex; gap: 10px;">
+            <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
+            <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
         </div>
     </div>
 
@@ -288,7 +264,7 @@
 
     function renderDebounced() {
         clearTimeout(renderTimeout);
-        renderTimeout = setTimeout(render, 150); // Płynne wyszukiwanie bez lagów
+        renderTimeout = setTimeout(render, 150); // Optymalizacja płynności
     }
 
     function render() {
@@ -302,7 +278,7 @@
             (nickVal ? p.name.toLowerCase().includes(nickVal) : true)
         );
 
-        // Najpierw ulubieni
+        // Sortowanie: Najpierw ulubieni, potem rosnąco po ID
         filtered.sort((a, b) => {
             let aFav = favs.includes(a.id);
             let bFav = favs.includes(b.id);
@@ -321,14 +297,9 @@
 
             return `
             <div class="card" style="animation-delay: ${Math.min(index * 0.015, 0.5)}s">
-                <div class="card-info">
-                    <div class="ping-box">
-                        <div class="ping-val">${p.ping || 20}</div>
-                        <div class="ping-lbl">ms</div>
-                    </div>
-                    <div class="id-box">#${p.id}</div>
-                    <div class="nick-txt" title="${p.name}">${p.name}</div>
-                </div>
+                <div class="ping-badge">${p.ping || 20}ms</div>
+                <div class="id-box">${p.id}</div>
+                <div class="nick-txt" title="${p.name}">${p.name}</div>
                 <button class="fav-btn ${favClass}" onclick="toggleFav(${p.id})">${favIcon}</button>
             </div>
             `;
@@ -337,7 +308,14 @@
 
     function toggleList() {
         showList = !showList;
-        document.getElementById('btnToggle').innerText = showList ? "Ukryj listę" : "Pokaż listę";
+        const btn = document.getElementById('btnToggle');
+        if (showList) {
+            btn.innerText = "Ukryj listę";
+            btn.classList.add('active');
+        } else {
+            btn.innerText = "Pokaż listę";
+            btn.classList.remove('active');
+        }
         render();
     }
 
