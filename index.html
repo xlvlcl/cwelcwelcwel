@@ -7,8 +7,8 @@
     <style>
         /* --- PALETA KOLORÓW (DOMYŚLNA) --- */
         :root {
-            --bg: #050505;
-            --panel: #0a0a0a;
+            --bg: #050505;             
+            --panel: #0a0a0a;          
             
             /* MOTYW ZMIENNY */
             --theme: #b026ff;          
@@ -41,7 +41,7 @@
             min-height: 100vh;
         }
 
-        /* Dodano position relative, żeby można było pozycjonować picker wewnątrz */
+        /* Relative potrzebne dla pozycjonowania emotki wewnątrz wrapper */
         .wrapper { 
             width: 100%; max-width: 1300px; position: relative; 
         }
@@ -49,34 +49,38 @@
         /* --- NOWY PICKER W PRAWYM GÓRNYM ROGU --- */
         .theme-switcher-top {
             position: absolute;
-            top: 10px;
-            right: 20px;
+            top: 0px;
+            right: 10px;
             z-index: 200; /* Zawsze na wierzchu */
+            width: 50px;
+            height: 50px;
         }
 
         /* Stylizacja emotki */
         .theme-icon {
             font-size: 2.5rem;
             cursor: pointer;
-            /* Emotka świeci aktualnym kolorem motywu */
             filter: drop-shadow(0 0 10px var(--theme-glow));
             transition: transform 0.3s;
+            text-align: center;
+            line-height: 50px;
         }
 
-        /* Efekt po najechaniu na emotkę */
         .theme-switcher-top:hover .theme-icon {
             transform: scale(1.1) rotate(10deg);
         }
 
-        /* Ukryty input, który jest "nad" emotką */
+        /* Ukryty input, który jest "nad" emotką i przechwytuje kliknięcie */
         #themePicker {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            opacity: 0; /* Niewidzialny */
+            opacity: 0; 
             cursor: pointer;
+            padding: 0;
+            margin: 0;
         }
 
         /* --- NAGŁÓWEK --- */
@@ -308,15 +312,148 @@
     let players = [];
     let showList = true;
 
-    // --- LOGIKA ZMIANY KOLORÓW ---
-    const picker = document.getElementById('themePicker');
+    // --- LOGIKA ZMIANY KOLORÓW (POPRAWIONA) ---
+    document.addEventListener("DOMContentLoaded", function() {
+        const picker = document.getElementById('themePicker');
+        
+        // Funkcja zmieniająca motyw
+        function setTheme(color) {
+            document.documentElement.style.setProperty('--theme', color);
+            // Dodajemy alpha channel (przezroczystość) do glow
+            document.documentElement.style.setProperty('--theme-glow', color + '66');
+            
+            if(picker) picker.value = color;
+            localStorage.setItem('grandrp_theme', color);
+        }
+
+        // Event listener na zmianę koloru
+        if(picker) {
+            picker.addEventListener('input', (e) => {
+                setTheme(e.target.value);
+            });
+            
+            // Wczytanie zapisanego koloru
+            const savedColor = localStorage.getItem('grandrp_theme');
+            if (savedColor) {
+                setTheme(savedColor);
+            }
+        }
+        
+        // Uruchomienie pobierania danych
+        getData(false);
+        
+        // Auto-odświeżanie co 15 sekund
+        setInterval(() => {
+            getData(true);
+        }, 15000);
+    });
+
+    // --- FUNKCJE DANYCH ---
     
-    function setTheme(color) {
-        document.documentElement.style.setProperty('--theme', color);
-        // Glow z przezroczystością
-        document.documentElement.style.setProperty('--theme-glow', color + '66');
-        picker.value = color;
-        localStorage.setItem('grandrp_theme', color);
+    function checkCustomServer() {
+        const select = document.getElementById('serverSelect');
+        const customInput = document.getElementById('customSrv');
+        
+        if (select.value === 'custom') {
+            customInput.style.display = 'block';
+            customInput.focus();
+        } else {
+            customInput.style.display = 'none';
+            manualRefresh();
+        }
     }
 
-    picker.addEventListener('input', (
+    async function getData(isAuto = false) {
+        let sID = document.getElementById('serverSelect').value;
+        
+        if (sID === 'custom') {
+            sID = document.getElementById('customSrv').value;
+            if (!sID || sID.length < 3) return; 
+        }
+
+        const btn = document.getElementById('refreshBtn');
+        const timeSpan = document.getElementById('time');
+        
+        if (!isAuto && btn) btn.innerText = "...";
+        
+        try {
+            // Dodano t=${Date.now()} żeby uniknąć cache
+            const res = await fetch(`https://corsproxy.io/?https://servers-frontend.fivem.net/api/servers/single/${sID}?t=${Date.now()}`);
+            const data = await res.json();
+            
+            if (data && data.Data && data.Data.players) {
+                players = data.Data.players;
+                players.sort((a,b) => a.id - b.id);
+                
+                const now = new Date();
+                if(timeSpan) timeSpan.innerText = "Aktualizacja: " + now.toLocaleTimeString();
+                render();
+            } else {
+                console.log("Brak danych graczy w odpowiedzi API");
+            }
+        } catch(e) {
+            console.error("Błąd pobierania:", e);
+            if (!isAuto) alert("Błąd! Nie znaleziono serwera lub problem z połączeniem.");
+        }
+
+        if (!isAuto && btn) btn.innerText = "ODŚWIEŻ";
+    }
+
+    function manualRefresh() {
+        getData(false);
+    }
+
+    function render() {
+        const idVal = document.getElementById('sid').value;
+        const nickVal = document.getElementById('snick').value.toLowerCase();
+        const grid = document.getElementById('grid');
+        const counter = document.getElementById('counter');
+
+        if(!grid || !counter) return;
+
+        const filtered = players.filter(p => {
+            const mId = idVal ? p.id.toString().startsWith(idVal) : true;
+            const mNick = nickVal ? p.name.toLowerCase().includes(nickVal) : true;
+            return mId && mNick;
+        });
+
+        counter.innerHTML = `Online: <strong>${filtered.length}</strong>`;
+
+        if(!showList) {
+            grid.innerHTML = "";
+            return;
+        }
+
+        let html = "";
+        filtered.forEach(p => {
+            html += `
+                <div class="card">
+                    <div class="id-box">${p.id}</div>
+                    <span class="nick-txt" title="${p.name}">${p.name}</span>
+                </div>
+            `;
+        });
+        grid.innerHTML = html || "<div style='color:#555; padding:10px; grid-column: 1/-1; text-align:center;'>Brak wyników.</div>";
+    }
+
+    function toggleList() {
+        showList = !showList;
+        const btn = document.getElementById('btnToggle');
+        
+        if(showList) {
+            if(btn) {
+                btn.innerText = "Ukryj listę";
+                btn.classList.add('active');
+            }
+        } else {
+            if(btn) {
+                btn.innerText = "Pokaż listę";
+                btn.classList.remove('active');
+            }
+        }
+        render();
+    }
+</script>
+
+</body>
+</html>
