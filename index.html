@@ -7,18 +7,18 @@
     <style>
         :root {
             --bg: #050505;             
-            --panel: rgba(15, 15, 15, 0.4); /* Szkło */         
+            --panel: rgba(18, 18, 18, 0.6);         
             --theme: #0055FF;          
             --theme-glow: rgba(0, 85, 255, 0.4);
             --text: #ffffff;
-            --text-dim: #999;
+            --text-dim: #888;
             --gold: #ffcc00;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', -apple-system, sans-serif;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             background-color: var(--bg);
             color: var(--text);
             padding: 20px;
@@ -48,12 +48,12 @@
             position: absolute; top: 0; left: 0;
             display: flex; flex-direction: column; gap: 8px;
             padding: 10px 15px; background: var(--panel);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            border-radius: 12px; z-index: 200;
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 14px; z-index: 200;
         }
         .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
         .dot.online { background: var(--theme); box-shadow: 0 0 10px var(--theme); }
         .status-label { color: var(--text-dim); text-transform: uppercase; }
 
@@ -62,9 +62,9 @@
             position: absolute; top: 0; right: 0;
             display: flex; align-items: center; gap: 10px;
             padding: 8px 15px; background: var(--panel);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px; z-index: 200;
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px; z-index: 200;
         }
         .color-preview { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); background-color: var(--theme); position: relative; cursor: pointer; box-shadow: 0 0 10px var(--theme-glow); }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
@@ -91,7 +91,7 @@
             width: 100%; max-width: 420px; margin: 0 auto 35px;
             border-radius: 16px; overflow: hidden; background: #000;
             box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px var(--theme-glow);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.05);
         }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
@@ -99,22 +99,22 @@
         /* CONTROLS (GLASSMORPHISM) */
         .controls { 
             background: var(--panel); 
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            padding: 25px 30px; border-radius: 24px; 
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 25px 30px; border-radius: 20px; 
             display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
             margin-bottom: 20px; 
         }
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
         label { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-left: 5px; }
         input, select { 
-            background: rgba(0,0,0,0.3); 
+            background: rgba(0,0,0,0.4); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             color: white; padding: 14px 18px; border-radius: 12px; outline: none; transition: 0.3s; 
             font-size: 1rem;
         }
-        input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 15px var(--theme-glow); background: rgba(0,0,0,0.5); }
+        input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 15px var(--theme-glow); background: rgba(0,0,0,0.6); }
         
         .btn-group button { 
             padding: 12px 30px; background: rgba(255, 255, 255, 0.03); 
@@ -124,74 +124,94 @@
         }
         .btn-group button:hover { 
             background: var(--theme); color: #000; border-color: var(--theme);
-            box-shadow: 0 5px 20px var(--theme-glow); transform: translateY(-3px);
+            box-shadow: 0 5px 20px var(--theme-glow); transform: translateY(-2px);
         }
 
         .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 30px 0; width: 100%; }
         #counter { font-size: 1.8rem; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 2px; font-weight: 300; }
-        #counter strong { color: var(--text); font-weight: 900; text-shadow: 0 0 15px var(--theme); }
+        #counter strong { color: var(--text); font-weight: 900; text-shadow: 0 0 15px var(--theme); transition: 0.3s; }
 
-        /* --- NOWE KAFELKI (STYL B - ULTRA-CLEAN GLASS) --- */
-        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; width: 100%; }
+        /* --- ZUPEŁNIE NOWE KAFELKI (Premium Minimal) --- */
+        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; width: 100%; }
         
         .card { 
-            background: var(--panel); 
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.06); 
-            padding: 16px 20px; 
-            border-radius: 18px; /* Bardziej zaokrąglone */
+            background: rgba(20, 20, 20, 0.5); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.04); 
+            padding: 20px; 
+            border-radius: 16px; 
             display: flex; 
-            align-items: center; 
+            flex-direction: column;
             justify-content: space-between;
             position: relative; 
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden; /* Utrzymuje watermark wewnątrz */
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s, border-color 0.3s;
             animation: fadeIn 0.4s ease forwards;
             opacity: 0;
-            transform: translateY(15px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            will-change: transform, opacity; /* Sprzętowa akceleracja dla płynności */
         }
 
         .card:hover { 
             border-color: rgba(255, 255, 255, 0.15); 
-            background: rgba(25, 25, 25, 0.5);
-            transform: translateY(-5px); 
-            box-shadow: 0 12px 30px rgba(0,0,0,0.4), inset 0 0 20px var(--theme-glow); 
+            transform: translateY(-4px); 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 0 0 1px var(--theme-glow); 
         }
 
-        .card-left { display: flex; align-items: center; gap: 18px; overflow: hidden; }
+        /* Gigantyczne, zatopione w tle ID (Watermark) */
+        .card-bg-id {
+            position: absolute;
+            right: -10px;
+            bottom: -20px;
+            font-size: 5rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.02);
+            z-index: 0;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+        .card:hover .card-bg-id { color: rgba(255, 255, 255, 0.04); }
 
-        /* Ping - subtelny, po lewej */
-        .ping-box { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
-        .ping-val { color: var(--text); font-weight: 800; font-size: 1.1rem; margin-bottom: 3px; }
-        .ping-lbl { color: var(--text-dim); font-size: 0.65rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
-
-        /* ID w formie "pastylki" */
-        .id-badge { 
-            background: var(--theme); 
-            color: #000; 
-            font-weight: 900; 
+        /* Zawartość kafelka (na wierzchu) */
+        .card-content { z-index: 1; position: relative; display: flex; flex-direction: column; height: 100%; }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        
+        .ping-pill { 
+            background: rgba(0, 0, 0, 0.4); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
             padding: 4px 10px; 
-            border-radius: 8px; 
-            font-family: monospace; 
-            font-size: 1rem;
-            box-shadow: 0 0 10px var(--theme-glow);
+            border-radius: 20px; 
+            font-size: 0.7rem; 
+            color: var(--text-dim); 
+            font-weight: 700;
+            display: flex; gap: 4px; align-items: center;
         }
-        
-        .nick-box { display: flex; flex-direction: column; justify-content: center; }
-        .nick-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; font-weight: 600; font-size: 1.05rem; color: var(--text); }
-        
-        /* Licznik Sesji */
-        .session-time { font-size: 0.7rem; color: var(--theme); margin-top: 3px; font-weight: 500; opacity: 0.9; }
+        .ping-pill span { color: var(--theme); text-shadow: 0 0 8px var(--theme-glow); }
 
-        /* Gwiazdka ulubionych */
+        .nick-txt { 
+            font-size: 1.25rem; 
+            font-weight: 700; 
+            color: var(--text); 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            letter-spacing: 0.5px;
+        }
+
+        .card-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; }
+        
+        .session-time { font-size: 0.75rem; color: var(--text-dim); font-weight: 500; }
+        .session-time span { color: var(--theme); }
+
+        /* Przycisk ulubionych */
         .fav-btn {
             background: transparent !important; border: none !important;
-            color: rgba(255,255,255,0.1) !important; font-size: 1.5rem; 
+            color: rgba(255,255,255,0.15) !important; font-size: 1.5rem; 
             cursor: pointer; transition: 0.3s; padding: 0; 
             box-shadow: none !important; height: auto;
         }
         .fav-btn:hover { color: var(--gold) !important; transform: scale(1.15) !important; }
-        .fav-btn.active { color: var(--gold) !important; filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.6)); }
+        .fav-btn.active { color: var(--gold) !important; filter: drop-shadow(0 0 10px rgba(255, 204, 0, 0.6)); }
 
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
         .hidden-input { display: none; }
@@ -233,8 +253,8 @@
             </select>
             <input type="text" id="customSrv" class="hidden-input" placeholder="Wpisz ID serwera">
         </div>
-        <div class="input-group"><label>Szukaj ID</label><input type="number" id="sid" placeholder="np. 123" oninput="render()"></div>
-        <div class="input-group"><label>Szukaj Nicku</label><input type="text" id="snick" placeholder="np. cwel" oninput="render()"></div>
+        <div class="input-group"><label>Szukaj ID</label><input type="number" id="sid" placeholder="np. 123" oninput="renderDebounced()"></div>
+        <div class="input-group"><label>Szukaj Nicku</label><input type="text" id="snick" placeholder="np. cwel" oninput="renderDebounced()"></div>
         <div class="btn-group" style="padding-top: 22px; display: flex; gap: 12px;">
             <button id="refreshBtn" onclick="manualRefresh()">Odśwież</button>
             <button id="btnToggle" onclick="toggleList()">Ukryj listę</button>
@@ -250,9 +270,8 @@
     let players = [];
     let showList = true;
     let favs = JSON.parse(localStorage.getItem('grandrp_favs')) || [];
-    
-    // Obiekt do trzymania czasu wejścia na serwer
     let seenPlayers = {}; 
+    let renderTimeout; // Optymalizacja płynności
 
     function setTheme(color) {
         document.documentElement.style.setProperty('--theme', color);
@@ -294,7 +313,6 @@
             if (data?.Data?.players) {
                 players = data.Data.players;
                 
-                // Rejestrujemy czas wejścia dla nowych osób
                 const now = Date.now();
                 players.forEach(p => {
                     if (!seenPlayers[p.id]) seenPlayers[p.id] = now;
@@ -311,6 +329,12 @@
         else favs.push(id);
         localStorage.setItem('grandrp_favs', JSON.stringify(favs));
         render(); 
+    }
+
+    // Optymalizacja wyszukiwania (Debounce)
+    function renderDebounced() {
+        clearTimeout(renderTimeout);
+        renderTimeout = setTimeout(render, 150); // Czeka 150ms po wpisaniu litery zanim odświeży stronę (zero lagów!)
     }
 
     function render() {
@@ -342,25 +366,23 @@
             let favClass = isFav ? 'active' : '';
             let favIcon = isFav ? '★' : '☆'; 
 
-            // Obliczanie czasu na serwerze (od uruchomienia strony)
             let timeDiff = now - (seenPlayers[p.id] || now);
             let minutesSeen = Math.floor(timeDiff / 60000);
-            let sessionText = minutesSeen < 1 ? "Właśnie dołączył" : `Od ${minutesSeen} min`;
+            let sessionText = minutesSeen < 1 ? "Właśnie dołączył" : `Widziany od <span>${minutesSeen} min</span>`;
 
             return `
-            <div class="card" style="animation-delay: ${Math.min(index * 0.015, 0.6)}s">
-                <div class="card-left">
-                    <div class="ping-box">
-                        <span class="ping-val">${p.ping || 20}</span>
-                        <span class="ping-lbl">ms</span>
+            <div class="card" style="animation-delay: ${Math.min(index * 0.01, 0.4)}s">
+                <div class="card-bg-id">${p.id}</div>
+                <div class="card-content">
+                    <div class="card-header">
+                        <button class="fav-btn ${favClass}" onclick="toggleFav(${p.id})">${favIcon}</button>
+                        <div class="ping-pill"><span>${p.ping || 20}</span> ms</div>
                     </div>
-                    <div class="id-badge">${p.id}</div>
-                    <div class="nick-box">
-                        <div class="nick-txt" title="${p.name}">${p.name}</div>
+                    <div class="nick-txt" title="${p.name}">${p.name}</div>
+                    <div class="card-footer">
                         <div class="session-time">${sessionText}</div>
                     </div>
                 </div>
-                <button class="fav-btn ${favClass}" onclick="toggleFav(${p.id})">${favIcon}</button>
             </div>
             `;
         }).join('');
@@ -384,8 +406,6 @@
     checkSystemStatus(); getData();
     setInterval(getData, 30000);
     setInterval(checkSystemStatus, 60000);
-    
-    // Co minutę odświeżamy sam wygląd, żeby aktualizować licznik "Od X min"
     setInterval(render, 60000); 
 </script>
 
