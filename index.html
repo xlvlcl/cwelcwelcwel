@@ -10,11 +10,10 @@
             --bg: #050505;             
             --panel: #0a0a0a;          
             
-            /* NOWY KOLOR GŁÓWNY (Electric Blue) */
+            /* DOMYŚLNY ELECTRIC BLUE */
             --theme: #0055FF;          
             --theme-glow: rgba(0, 85, 255, 0.5);
             
-            /* STAŁE NAGŁÓWKA */
             --header-gray: #e6e6e6;    
             --header-glow: rgba(255, 255, 255, 0.3);
 
@@ -45,50 +44,57 @@
             width: 100%; max-width: 1300px; position: relative; 
         }
 
-        /* --- IKONA MOTYWU (DIAMENT) --- */
-        .theme-switcher-top {
+        /* --- NOWY PANEL ZMIANY KOLORU (BEZ EMOTKI) --- */
+        .theme-panel {
             position: absolute;
-            top: 0px;
-            right: 10px;
-            z-index: 200;
-            width: 60px;
-            height: 60px;
+            top: 0;
+            right: 0;
             display: flex;
-            justify-content: center;
             align-items: center;
+            gap: 10px;
+            padding: 8px 15px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--theme);
+            border-radius: 8px;
+            box-shadow: 0 0 10px var(--theme-glow);
+            z-index: 200;
         }
 
-        /* Animowany Diament */
-        .theme-icon {
-            font-size: 2.2rem;
+        .theme-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--theme);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px var(--theme-glow);
+        }
+
+        .color-preview {
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            border: 2px solid #fff;
+            background-color: var(--theme); /* Pokazuje aktualny kolor */
+            position: relative;
             cursor: pointer;
-            filter: drop-shadow(0 0 10px var(--theme-glow));
-            transition: all 0.3s ease;
-            animation: gemPulse 3s infinite alternate; /* Animacja pulsowania */
+            box-shadow: 0 0 8px var(--theme);
+            overflow: hidden;
         }
 
-        @keyframes gemPulse {
-            0% { transform: scale(1); filter: drop-shadow(0 0 5px var(--theme)); }
-            100% { transform: scale(1.1); filter: drop-shadow(0 0 20px var(--theme-glow)); }
-        }
-
-        .theme-switcher-top:hover .theme-icon {
-            transform: rotate(15deg) scale(1.2);
-            filter: drop-shadow(0 0 25px var(--theme));
-        }
-
-        /* Ukryty input */
+        /* Niewidzialny input nad kwadracikiem */
         #themePicker {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            opacity: 0; cursor: pointer; padding: 0; margin: 0;
+            top: -5px; left: -5px;
+            width: 40px; height: 40px;
+            opacity: 0;
+            cursor: pointer;
         }
 
         /* --- NAGŁÓWEK --- */
         header { 
             text-align: center; 
             margin-bottom: 30px; 
-            padding-top: 20px; 
+            padding-top: 40px; /* Więcej miejsca u góry */
             position: relative; 
             z-index: 10;
         }
@@ -258,9 +264,11 @@
 <body>
 
 <div class="wrapper">
-    <div class="theme-switcher-top" title="Zmień kolor motywu">
-        <div class="theme-icon">💎</div>
-        <input type="color" id="themePicker" value="#0055FF">
+    <div class="theme-panel">
+        <span class="theme-label">MOTYW:</span>
+        <div class="color-preview">
+            <input type="color" id="themePicker" value="#0055FF">
+        </div>
     </div>
 
     <header>
@@ -310,51 +318,71 @@
 </div>
 
 <script>
-    // Zmienne globalne (dostępne dla całej strony)
+    // GLOBALNE ZMIENNE
     let players = [];
     let showList = true;
 
     // --- LOGIKA MOTYWU ---
-    // Definiujemy funkcję setTheme globalnie
     function setTheme(color) {
+        // Ustawienie zmiennych CSS
         document.documentElement.style.setProperty('--theme', color);
         document.documentElement.style.setProperty('--theme-glow', color + '66');
         
+        // Aktualizacja pickera
         const picker = document.getElementById('themePicker');
-        if(picker) picker.value = color;
+        if (picker) picker.value = color;
         
+        // Zapis w pamięci
         localStorage.setItem('grandrp_theme', color);
     }
 
-    // Inicjalizacja przy starcie
-    window.onload = function() {
-        // Obsługa koloru
-        const picker = document.getElementById('themePicker');
-        if(picker) {
-            picker.addEventListener('input', (e) => {
-                setTheme(e.target.value);
-            });
+    // --- GŁÓWNA FUNKCJA POBIERANIA DANYCH ---
+    async function getData(isAuto = false) {
+        let sID = document.getElementById('serverSelect').value;
+        const customInput = document.getElementById('customSrv');
+
+        // Obsługa własnego ID
+        if (sID === 'custom') {
+            if (customInput) sID = customInput.value;
+            if (!sID || sID.length < 3) return; 
         }
 
-        const savedColor = localStorage.getItem('grandrp_theme');
-        if (savedColor) {
-            setTheme(savedColor);
-        } else {
-            // Domyślnie Twój niebieski
-            setTheme('#0055FF');
-        }
-
-        // Pobranie danych na start
-        getData(false);
+        const btn = document.getElementById('refreshBtn');
+        const timeSpan = document.getElementById('time');
         
-        // Auto-odświeżanie
-        setInterval(() => {
-            getData(true);
-        }, 15000);
-    };
+        if (!isAuto && btn) btn.innerText = "...";
+        
+        try {
+            // Użycie corsproxy.io z losowym parametrem czasu aby uniknąć cache
+            const res = await fetch(`https://corsproxy.io/?https://servers-frontend.fivem.net/api/servers/single/${sID}?t=${Date.now()}`);
+            
+            if (!res.ok) throw new Error('Network response was not ok');
+            
+            const data = await res.json();
+            
+            if (data && data.Data && data.Data.players) {
+                players = data.Data.players;
+                players.sort((a,b) => a.id - b.id);
+                
+                const now = new Date();
+                if (timeSpan) timeSpan.innerText = "Aktualizacja: " + now.toLocaleTimeString();
+                render();
+            } else {
+                console.log("Brak graczy lub błąd struktury danych");
+            }
+        } catch(e) {
+            console.error("Błąd fetch:", e);
+            if (!isAuto) alert("Nie udało się pobrać danych. Sprawdź ID serwera.");
+        }
 
-    // --- FUNKCJE DANYCH ---
-    
+        if (!isAuto && btn) btn.innerText = "ODŚWIEŻ";
+    }
+
+    // --- FUNKCJE POMOCNICZE ---
+    function manualRefresh() {
+        getData(false);
+    }
+
     function checkCustomServer() {
         const select = document.getElementById('serverSelect');
         const customInput = document.getElementById('customSrv');
@@ -368,23 +396,85 @@
         }
     }
 
-    async function getData(isAuto = false) {
-        let sID = document.getElementById('serverSelect').value;
-        
-        if (sID === 'custom') {
-            sID = document.getElementById('customSrv').value;
-            if (!sID || sID.length < 3) return; 
+    function render() {
+        const idVal = document.getElementById('sid').value;
+        const nickVal = document.getElementById('snick').value.toLowerCase();
+        const grid = document.getElementById('grid');
+        const counter = document.getElementById('counter');
+
+        if (!grid || !counter) return;
+
+        const filtered = players.filter(p => {
+            const mId = idVal ? p.id.toString().startsWith(idVal) : true;
+            const mNick = nickVal ? p.name.toLowerCase().includes(nickVal) : true;
+            return mId && mNick;
+        });
+
+        counter.innerHTML = `Online: <strong>${filtered.length}</strong>`;
+
+        if (!showList) {
+            grid.innerHTML = "";
+            return;
         }
 
-        const btn = document.getElementById('refreshBtn');
-        const timeSpan = document.getElementById('time');
+        let html = "";
+        filtered.forEach(p => {
+            html += `
+                <div class="card">
+                    <div class="id-box">${p.id}</div>
+                    <span class="nick-txt" title="${p.name}">${p.name}</span>
+                </div>
+            `;
+        });
+        grid.innerHTML = html || "<div style='color:#555; padding:10px; grid-column: 1/-1; text-align:center'>Brak wyników.</div>";
+    }
+
+    function toggleList() {
+        showList = !showList;
+        const btn = document.getElementById('btnToggle');
         
-        if (!isAuto && btn) btn.innerText = "...";
-        
-        try {
-            const res = await fetch(`https://corsproxy.io/?https://servers-frontend.fivem.net/api/servers/single/${sID}?t=${Date.now()}`);
-            const data = await res.json();
-            
-            if (data && data.Data && data.Data.players) {
-                players = data.Data.players;
-                players.sort((a,b) => a.id - b.id);
+        if (showList) {
+            if (btn) {
+                btn.innerText = "Ukryj listę";
+                btn.classList.add('active');
+            }
+        } else {
+            if (btn) {
+                btn.innerText = "Pokaż listę";
+                btn.classList.remove('active');
+            }
+        }
+        render();
+    }
+
+    // --- INICJALIZACJA PO ZAŁADOWANIU STRONY ---
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Obsługa koloru
+        const picker = document.getElementById('themePicker');
+        if (picker) {
+            picker.addEventListener('input', (e) => {
+                setTheme(e.target.value);
+            });
+        }
+
+        // Wczytanie zapisanego koloru lub domyślnego
+        const savedColor = localStorage.getItem('grandrp_theme');
+        if (savedColor) {
+            setTheme(savedColor);
+        } else {
+            setTheme('#0055FF'); // Domyślny Electric Blue
+        }
+
+        // 2. Pierwsze pobranie danych
+        getData(false);
+
+        // 3. Ustawienie auto-odświeżania
+        setInterval(() => {
+            getData(true);
+        }, 15000);
+    });
+
+</script>
+
+</body>
+</html>
