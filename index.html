@@ -7,18 +7,18 @@
     <style>
         :root {
             --bg: #050505;             
-            --panel: rgba(10, 10, 10, 0.75);          
+            --panel: rgba(15, 15, 15, 0.4); /* Szkło */         
             --theme: #0055FF;          
             --theme-glow: rgba(0, 85, 255, 0.4);
             --text: #ffffff;
-            --text-dim: #888;
+            --text-dim: #999;
             --gold: #ffcc00;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', -apple-system, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             padding: 20px;
@@ -35,8 +35,8 @@
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
             background: 
-                radial-gradient(at 0% 0%, var(--theme-glow) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, var(--theme-glow) 0px, transparent 50%),
+                radial-gradient(at 0% 0%, var(--theme-glow) 0px, transparent 60%),
+                radial-gradient(at 100% 100%, var(--theme-glow) 0px, transparent 60%),
                 radial-gradient(at 50% 50%, rgba(0,0,0,1) 0px, transparent 100%);
             background-attachment: fixed;
         }
@@ -47,100 +47,99 @@
         .system-status {
             position: absolute; top: 0; left: 0;
             display: flex; flex-direction: column; gap: 8px;
-            padding: 10px 15px; background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px); 
-            border: 1px solid var(--theme); 
-            box-shadow: 0 0 10px var(--theme-glow); 
-            border-radius: 8px; z-index: 200;
+            padding: 10px 15px; background: var(--panel);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 12px; z-index: 200;
         }
-        .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }
+        .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
-        .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
-        .status-label { color: var(--theme); text-transform: uppercase; }
+        .dot.online { background: var(--theme); box-shadow: 0 0 10px var(--theme); }
+        .status-label { color: var(--text-dim); text-transform: uppercase; }
 
         /* THEME PANEL */
         .theme-panel {
             position: absolute; top: 0; right: 0;
             display: flex; align-items: center; gap: 10px;
-            padding: 8px 15px; background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px); border: 1px solid var(--theme);
-            border-radius: 8px; box-shadow: 0 0 15px var(--theme-glow);
-            z-index: 200;
+            padding: 8px 15px; background: var(--panel);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px; z-index: 200;
         }
-        .color-preview { width: 25px; height: 25px; border-radius: 4px; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; }
+        .color-preview { width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); background-color: var(--theme); position: relative; cursor: pointer; box-shadow: 0 0 10px var(--theme-glow); }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
 
         /* --- NAGŁÓWEK --- */
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
         h1 { 
-            font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; 
-            background: linear-gradient(to bottom, #fff 40%, #999 100%); 
+            font-size: 3.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; 
+            background: linear-gradient(to bottom, #fff 30%, #aaa 100%); 
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
             margin-bottom: 5px; transition: 0.5s;
             filter: drop-shadow(0 0 5px var(--theme-glow));
             animation: neonPulse 3s infinite ease-in-out;
         }
         @keyframes neonPulse {
-            0%, 100% { filter: drop-shadow(0 0 5px var(--theme-glow)); }
-            50% { filter: drop-shadow(0 0 20px var(--theme)); }
+            0%, 100% { filter: drop-shadow(0 0 8px var(--theme-glow)); }
+            50% { filter: drop-shadow(0 0 25px var(--theme)); }
         }
-
-        .signature { font-size: 1rem; color: var(--theme); letter-spacing: 5px; text-transform: uppercase; font-weight: bold; text-shadow: 0 0 10px var(--theme-glow); display: inline-block; position: relative; }
-        .signature::before, .signature::after { content: "—"; color: #555; margin: 0 15px; }
+        .signature { font-size: 0.9rem; color: var(--theme); letter-spacing: 6px; text-transform: uppercase; font-weight: 700; display: inline-block; position: relative; }
+        .signature::before, .signature::after { content: "—"; color: rgba(255,255,255,0.2); margin: 0 15px; }
 
         /* VIDEO */
         .video-box {
-            width: 100%; max-width: 400px; margin: 0 auto 30px;
-            border: 2px solid var(--theme); border-radius: 15px;
-            overflow: hidden; background: #000;
-            box-shadow: 0 0 25px var(--theme-glow);
+            width: 100%; max-width: 420px; margin: 0 auto 35px;
+            border-radius: 16px; overflow: hidden; background: #000;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5), 0 0 20px var(--theme-glow);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
-        /* CONTROLS */
-        .controls { background: var(--panel); backdrop-filter: blur(15px); padding: 25px; border-radius: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; }
+        /* CONTROLS (GLASSMORPHISM) */
+        .controls { 
+            background: var(--panel); 
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            padding: 25px 30px; border-radius: 24px; 
+            display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px; 
+        }
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
-        label { font-size: 0.7rem; color: var(--theme); font-weight: bold; text-transform: uppercase; }
-        input, select { background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 14px; border-radius: 10px; outline: none; transition: 0.3s; }
-        input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
+        label { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-left: 5px; }
+        input, select { 
+            background: rgba(0,0,0,0.3); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            color: white; padding: 14px 18px; border-radius: 12px; outline: none; transition: 0.3s; 
+            font-size: 1rem;
+        }
+        input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 15px var(--theme-glow); background: rgba(0,0,0,0.5); }
         
-        /* SZKLANE PRZYCISKI */
         .btn-group button { 
-            padding: 12px 30px; 
-            background: rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--theme); 
-            color: var(--theme); 
-            border-radius: 10px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            transition: 0.4s; 
-            height: 48px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            padding: 12px 30px; background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text); 
+            border-radius: 12px; cursor: pointer; font-weight: 700; text-transform: uppercase; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); height: 50px;
         }
         .btn-group button:hover { 
-            background: var(--theme); 
-            color: #000; 
-            box-shadow: 0 0 25px var(--theme); 
-            transform: translateY(-2px);
+            background: var(--theme); color: #000; border-color: var(--theme);
+            box-shadow: 0 5px 20px var(--theme-glow); transform: translateY(-3px);
         }
 
-        .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 25px 0; width: 100%; }
-        #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
-        #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
+        .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 30px 0; width: 100%; }
+        #counter { font-size: 1.8rem; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 2px; font-weight: 300; }
+        #counter strong { color: var(--text); font-weight: 900; text-shadow: 0 0 15px var(--theme); }
 
-        /* --- NOWY DESIGN KAFELKÓW --- */
-        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; width: 100%; }
+        /* --- NOWE KAFELKI (STYL B - ULTRA-CLEAN GLASS) --- */
+        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; width: 100%; }
         
         .card { 
-            background: linear-gradient(135deg, rgba(20, 20, 20, 0.8), rgba(5, 5, 5, 0.9));
-            backdrop-filter: blur(8px); 
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-left: 4px solid var(--theme); /* Mocny akcent z lewej */
-            padding: 12px 18px; 
-            border-radius: 12px; 
+            background: var(--panel); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06); 
+            padding: 16px 20px; 
+            border-radius: 18px; /* Bardziej zaokrąglone */
             display: flex; 
             align-items: center; 
             justify-content: space-between;
@@ -148,49 +147,53 @@
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             animation: fadeIn 0.4s ease forwards;
             opacity: 0;
-            transform: translateY(10px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transform: translateY(15px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
 
         .card:hover { 
-            border-color: var(--theme); 
-            transform: translateY(-4px) scale(1.02); 
-            box-shadow: 0 8px 25px var(--theme-glow); 
+            border-color: rgba(255, 255, 255, 0.15); 
+            background: rgba(25, 25, 25, 0.5);
+            transform: translateY(-5px); 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4), inset 0 0 20px var(--theme-glow); 
         }
 
-        .card-info { display: flex; align-items: center; gap: 15px; overflow: hidden; }
+        .card-left { display: flex; align-items: center; gap: 18px; overflow: hidden; }
 
-        /* Ping po lewej */
-        .ping-box { display: flex; flex-direction: column; align-items: center; line-height: 1; font-size: 0.65rem; color: var(--text-dim); font-family: monospace; }
-        .ping-box span { color: var(--theme); font-weight: 900; font-size: 0.9rem; margin-bottom: 2px; text-shadow: 0 0 5px var(--theme-glow); }
+        /* Ping - subtelny, po lewej */
+        .ping-box { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+        .ping-val { color: var(--text); font-weight: 800; font-size: 1.1rem; margin-bottom: 3px; }
+        .ping-lbl { color: var(--text-dim); font-size: 0.65rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
 
-        /* Podświetlone ID */
-        .id-box { 
-            background: rgba(255, 255, 255, 0.05); 
-            color: var(--theme); 
-            border: 1px solid var(--theme-glow); 
+        /* ID w formie "pastylki" */
+        .id-badge { 
+            background: var(--theme); 
+            color: #000; 
             font-weight: 900; 
-            padding: 6px 12px; 
+            padding: 4px 10px; 
             border-radius: 8px; 
             font-family: monospace; 
-            font-size: 1.1rem;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            font-size: 1rem;
+            box-shadow: 0 0 10px var(--theme-glow);
         }
         
-        .nick-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; font-weight: 600; font-size: 1.05rem; }
+        .nick-box { display: flex; flex-direction: column; justify-content: center; }
+        .nick-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; font-weight: 600; font-size: 1.05rem; color: var(--text); }
+        
+        /* Licznik Sesji */
+        .session-time { font-size: 0.7rem; color: var(--theme); margin-top: 3px; font-weight: 500; opacity: 0.9; }
 
-        /* PRZYCISK ULUBIONYCH (GWIAZDKA) */
+        /* Gwiazdka ulubionych */
         .fav-btn {
             background: transparent !important; border: none !important;
-            color: #444 !important; font-size: 1.6rem; 
+            color: rgba(255,255,255,0.1) !important; font-size: 1.5rem; 
             cursor: pointer; transition: 0.3s; padding: 0; 
-            box-shadow: none !important; outline: none; line-height: 1;
+            box-shadow: none !important; height: auto;
         }
-        .fav-btn:hover { color: var(--gold) !important; transform: scale(1.2) !important; }
+        .fav-btn:hover { color: var(--gold) !important; transform: scale(1.15) !important; }
         .fav-btn.active { color: var(--gold) !important; filter: drop-shadow(0 0 8px rgba(255, 204, 0, 0.6)); }
 
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
-
         .hidden-input { display: none; }
     </style>
 </head>
@@ -200,12 +203,12 @@
 
 <div class="wrapper">
     <div class="system-status">
-        <div class="status-item"><div id="fivem-dot" class="dot"></div><span class="status-label">FiveM:</span> <span id="fivem-text">CHECKING</span></div>
-        <div class="status-item"><div id="steam-dot" class="dot"></div><span class="status-label">Steam:</span> <span id="steam-text">CHECKING</span></div>
+        <div class="status-item"><div id="fivem-dot" class="dot"></div><span class="status-label">FiveM:</span> <span id="fivem-text" style="color:var(--text-dim)">CHECKING</span></div>
+        <div class="status-item"><div id="steam-dot" class="dot"></div><span class="status-label">Steam:</span> <span id="steam-text" style="color:var(--text-dim)">CHECKING</span></div>
     </div>
 
     <div class="theme-panel">
-        <span class="theme-label">MOTYW:</span>
+        <span class="theme-label" style="font-size: 0.7rem; color: var(--text-dim); font-weight: bold;">KOLOR</span>
         <div class="color-preview"><input type="color" id="themePicker" value="#0055FF"></div>
     </div>
 
@@ -232,8 +235,8 @@
         </div>
         <div class="input-group"><label>Szukaj ID</label><input type="number" id="sid" placeholder="np. 123" oninput="render()"></div>
         <div class="input-group"><label>Szukaj Nicku</label><input type="text" id="snick" placeholder="np. cwel" oninput="render()"></div>
-        <div class="btn-group" style="padding-top: 19px; display: flex; gap: 10px;">
-            <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
+        <div class="btn-group" style="padding-top: 22px; display: flex; gap: 12px;">
+            <button id="refreshBtn" onclick="manualRefresh()">Odśwież</button>
             <button id="btnToggle" onclick="toggleList()">Ukryj listę</button>
         </div>
     </div>
@@ -246,9 +249,10 @@
 <script>
     let players = [];
     let showList = true;
-    
-    // Pobieranie ulubionych z LocalStorage
     let favs = JSON.parse(localStorage.getItem('grandrp_favs')) || [];
+    
+    // Obiekt do trzymania czasu wejścia na serwer
+    let seenPlayers = {}; 
 
     function setTheme(color) {
         document.documentElement.style.setProperty('--theme', color);
@@ -265,9 +269,9 @@
             const dot = document.getElementById(`${s.id}-dot`), text = document.getElementById(`${s.id}-text`);
             try {
                 const res = await fetch(`https://corsproxy.io/?${s.url}`, { method: 'HEAD' });
-                if (res.ok) { dot.className = 'dot online'; text.innerText = 'ONLINE'; text.style.color = 'var(--theme)'; }
+                if (res.ok) { dot.className = 'dot online'; text.innerText = 'ONLINE'; text.style.color = 'var(--text)'; }
                 else throw new Error();
-            } catch (e) { dot.className = 'dot offline'; text.innerText = 'BŁĄD'; text.style.opacity = '0.5'; }
+            } catch (e) { dot.className = 'dot offline'; text.innerText = 'BŁĄD'; text.style.color = 'var(--text-dim)'; }
         });
     }
 
@@ -289,21 +293,24 @@
             const data = await res.json();
             if (data?.Data?.players) {
                 players = data.Data.players;
+                
+                // Rejestrujemy czas wejścia dla nowych osób
+                const now = Date.now();
+                players.forEach(p => {
+                    if (!seenPlayers[p.id]) seenPlayers[p.id] = now;
+                });
+
                 render();
             }
-        } catch(e) { console.error("Błąd"); }
+        } catch(e) { console.error("Błąd pobierania"); }
         document.getElementById('refreshBtn').innerText = "ODŚWIEŻ";
     }
 
-    // Dodawanie/Usuwanie z ulubionych
     function toggleFav(id) {
-        if (favs.includes(id)) {
-            favs = favs.filter(f => f !== id); // Usuń jeśli już jest
-        } else {
-            favs.push(id); // Dodaj jeśli nie ma
-        }
+        if (favs.includes(id)) favs = favs.filter(f => f !== id);
+        else favs.push(id);
         localStorage.setItem('grandrp_favs', JSON.stringify(favs));
-        render(); // Odśwież listę, żeby gwiazdki i kolejność się zmieniły
+        render(); 
     }
 
     function render() {
@@ -317,29 +324,41 @@
             (nickVal ? p.name.toLowerCase().includes(nickVal) : true)
         );
 
-        // Sortowanie: Najpierw Ulubieni, potem po ID rosnąco
         filtered.sort((a, b) => {
             let aFav = favs.includes(a.id);
             let bFav = favs.includes(b.id);
-            if (aFav && !bFav) return -1; // "a" jest ulubione, ląduje wyżej
-            if (!aFav && bFav) return 1;  // "b" jest ulubione, ląduje wyżej
-            return a.id - b.id;           // Jeśli obaj lub żaden - sortuj po ID
+            if (aFav && !bFav) return -1; 
+            if (!aFav && bFav) return 1;  
+            return a.id - b.id;           
         });
 
         counter.innerHTML = `Online: <strong>${filtered.length}</strong>`;
         if (!showList) { grid.innerHTML = ""; return; }
 
+        const now = Date.now();
+
         grid.innerHTML = filtered.map((p, index) => {
             let isFav = favs.includes(p.id);
             let favClass = isFav ? 'active' : '';
-            let favIcon = isFav ? '★' : '☆'; // Pełna lub pusta gwiazdka
+            let favIcon = isFav ? '★' : '☆'; 
+
+            // Obliczanie czasu na serwerze (od uruchomienia strony)
+            let timeDiff = now - (seenPlayers[p.id] || now);
+            let minutesSeen = Math.floor(timeDiff / 60000);
+            let sessionText = minutesSeen < 1 ? "Właśnie dołączył" : `Od ${minutesSeen} min`;
 
             return `
-            <div class="card" style="animation-delay: ${Math.min(index * 0.01, 0.5)}s">
-                <div class="card-info">
-                    <div class="ping-box"><span>${p.ping || 20}</span>ms</div>
-                    <div class="id-box">${p.id}</div>
-                    <div class="nick-txt" title="${p.name}">${p.name}</div>
+            <div class="card" style="animation-delay: ${Math.min(index * 0.015, 0.6)}s">
+                <div class="card-left">
+                    <div class="ping-box">
+                        <span class="ping-val">${p.ping || 20}</span>
+                        <span class="ping-lbl">ms</span>
+                    </div>
+                    <div class="id-badge">${p.id}</div>
+                    <div class="nick-box">
+                        <div class="nick-txt" title="${p.name}">${p.name}</div>
+                        <div class="session-time">${sessionText}</div>
+                    </div>
                 </div>
                 <button class="fav-btn ${favClass}" onclick="toggleFav(${p.id})">${favIcon}</button>
             </div>
@@ -365,6 +384,9 @@
     checkSystemStatus(); getData();
     setInterval(getData, 30000);
     setInterval(checkSystemStatus, 60000);
+    
+    // Co minutę odświeżamy sam wygląd, żeby aktualizować licznik "Od X min"
+    setInterval(render, 60000); 
 </script>
 
 </body>
