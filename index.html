@@ -9,7 +9,7 @@
             --bg: #050505;             
             --panel: rgba(15, 15, 15, 0.85);          
             --theme: #0055FF;
-            --theme-rgb: 0, 85, 255; /* Potrzebne do nowych efektów */
+            --theme-rgb: 0, 85, 255; 
             --theme-glow: rgba(0, 85, 255, 0.4);
             --text: #ffffff;
             --text-dim: #888;
@@ -49,7 +49,7 @@
             position: absolute; top: 0; left: 0;
             display: flex; flex-direction: column; gap: 8px;
             padding: 10px 15px; background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px); 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             border: 1px solid var(--theme); 
             box-shadow: 0 0 10px var(--theme-glow); 
             border-radius: 8px; z-index: 200;
@@ -64,11 +64,14 @@
             position: absolute; top: 0; right: 0;
             display: flex; align-items: center; gap: 10px;
             padding: 8px 15px; background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px); border: 1px solid var(--theme);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--theme);
             border-radius: 8px; box-shadow: 0 0 15px var(--theme-glow);
             z-index: 200;
         }
-        .color-preview { width: 25px; height: 25px; border-radius: 4px; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; }
+        /* ZMIANA: KOŁO ZAMIAST KWADRATU */
+        .color-preview { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; box-shadow: 0 0 8px var(--theme-glow); transition: 0.3s; }
+        .color-preview:hover { transform: scale(1.1); }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
 
         /* --- NAGŁÓWEK --- */
@@ -94,17 +97,17 @@
 
         /* CONTROLS */
         .controls { 
-            background: var(--panel); backdrop-filter: blur(10px); padding: 25px; 
+            background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); padding: 25px; 
             border-radius: 12px; display: flex; flex-wrap: wrap; gap: 20px; 
-            justify-content: center; border: 1px solid #222; margin-bottom: 20px; 
+            justify-content: center; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; 
         }
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
         label { font-size: 0.7rem; color: var(--theme); font-weight: bold; text-transform: uppercase; margin-left: 5px; }
         input, select { 
-            background: rgba(0,0,0,0.6); border: 1px solid #333; color: white; 
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; 
             padding: 14px; border-radius: 8px; outline: none; transition: 0.3s; 
         }
-        input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
+        input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); background: rgba(0,0,0,0.6); }
         
         .btn-group button { 
             padding: 12px 30px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); 
@@ -117,26 +120,25 @@
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
 
-        /* --- NOWE KAFELKI Z ANIMACJĄ "GLEAM" --- */
+        /* --- SZKLANE KAFELKI Z ANIMACJĄ "GLEAM" --- */
         #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; width: 100%; }
         
         .card { 
-            background: var(--panel); 
-            backdrop-filter: blur(5px); 
-            border: 1px solid #222; 
+            /* ZMIANA: Szklane tło bez ciemnego koloru */
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
             border-left: 4px solid var(--theme); 
             padding: 12px 18px; 
             border-radius: 8px; 
             display: flex; 
             align-items: center; 
             position: relative; 
-            overflow: hidden; /* Ważne dla efektu świetlnego */
-            /* Nowa, bardziej sprężysta animacja */
+            overflow: hidden; 
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             animation: fadeIn 0.4s ease forwards;
             opacity: 0;
             transform: translateY(10px) scale(1);
-            /* Akceleracja sprzętowa */
             transform: translateZ(0); will-change: transform, box-shadow, background;
         }
 
@@ -145,43 +147,46 @@
             content: '';
             position: absolute;
             top: 0; left: -150%; width: 100%; height: 100%;
-            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
             transition: all 0.6s ease-in-out;
             z-index: 1;
             pointer-events: none;
         }
 
         .card:hover { 
-            /* Zmiana tła na delikatny gradient w kolorze motywu */
-            background: linear-gradient(135deg, var(--panel), rgba(var(--theme-rgb), 0.25));
+            /* ZMIANA: Delikatne zabarwienie w kolorze motywu, zamiast ciężkiego czarnego tła */
+            background: rgba(var(--theme-rgb), 0.15);
             border-color: var(--theme); 
-            /* Wyższe uniesienie i powiększenie */
             transform: translateY(-7px) scale(1.02); 
-            /* Głebszy, wielowarstwowy cień */
             box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5), 0 0 25px var(--theme-glow);
         }
 
-        /* Uruchomienie efektu świetlnego po najechaniu */
         .card:hover::before {
             left: 150%;
         }
 
-        /* Elementy wewnątrz muszą być nad efektem świetlnym */
         .card > * { z-index: 2; position: relative; }
 
         .ping-badge { font-size: 0.75rem; font-family: monospace; font-weight: bold; color: var(--theme); opacity: 0.9; margin-right: 15px; transition: 0.3s; }
-        .id-box { color: var(--theme); border: 1px solid var(--theme); font-weight: bold; padding: 5px 10px; border-radius: 6px; margin-right: 15px; font-family: monospace; transition: 0.3s; background: rgba(0,0,0,0.2); }
-        .nick-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; transition: 0.3s; }
+        
+        .id-box { 
+            background: rgba(255, 255, 255, 0.05); /* Szklana pastylka zamiast czarnej */
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            color: var(--theme); font-weight: bold; padding: 4px 10px; border-radius: 6px; 
+            margin-right: 15px; font-family: monospace; transition: 0.3s; 
+        }
+        
+        .nick-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; transition: 0.3s; color: var(--text); }
 
-        /* Zmiany kolorów tekstu na hover dla lepszego kontrastu */
-        .card:hover .ping-badge { color: #fff; }
+        /* Zmiany kolorów tekstu na hover - jaśniejszy motyw, żeby pasował do szkła */
+        .card:hover .ping-badge { color: #fff; text-shadow: 0 0 5px var(--theme-glow); }
         .card:hover .id-box { background: var(--theme); color: #000; border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
         .card:hover .nick-txt { color: #fff; text-shadow: 0 0 5px var(--theme-glow); }
 
         .fav-btn {
             position: absolute; top: 8px; right: 10px;
             background: transparent !important; border: none !important;
-            color: #444 !important; font-size: 1.2rem; 
+            color: rgba(255,255,255,0.2) !important; font-size: 1.2rem; 
             cursor: pointer; transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 0; 
             box-shadow: none !important; height: auto; outline: none; line-height: 1; z-index: 5;
         }
@@ -204,7 +209,7 @@
     </div>
 
     <div class="theme-panel">
-        <span class="theme-label">MOTYW:</span>
+        <span class="theme-label" style="font-size: 0.7rem; font-weight: bold; color: var(--theme);">MOTYW:</span>
         <div class="color-preview"><input type="color" id="themePicker" value="#0055FF"></div>
     </div>
 
@@ -248,7 +253,6 @@
     let favs = JSON.parse(localStorage.getItem('grandrp_favs')) || [];
     let renderTimeout;
 
-    // Funkcja pomocnicza do konwersji HEX na RGB dla nowych efektów
     function hexToRgb(hex) {
         let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 85, 255';
@@ -256,7 +260,7 @@
 
     function setTheme(color) {
         document.documentElement.style.setProperty('--theme', color);
-        document.documentElement.style.setProperty('--theme-rgb', hexToRgb(color)); // Ustawiamy też wersję RGB
+        document.documentElement.style.setProperty('--theme-rgb', hexToRgb(color));
         document.documentElement.style.setProperty('--theme-glow', color + '66');
         document.querySelector('.color-preview').style.backgroundColor = color;
         localStorage.setItem('grandrp_theme', color);
@@ -373,7 +377,7 @@
 
     const saved = localStorage.getItem('grandrp_theme');
     if(saved) setTheme(saved);
-    else setTheme('#0055FF'); // Domyślny kolor startowy
+    else setTheme('#0055FF'); 
     
     checkSystemStatus(); getData();
     setInterval(getData, 30000);
