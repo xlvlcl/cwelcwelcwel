@@ -69,7 +69,6 @@
             border-radius: 8px; box-shadow: 0 0 15px var(--theme-glow);
             z-index: 200;
         }
-        /* ZMIANA: KOŁO ZAMIAST KWADRATU */
         .color-preview { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; box-shadow: 0 0 8px var(--theme-glow); transition: 0.3s; }
         .color-preview:hover { transform: scale(1.1); }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
@@ -120,11 +119,11 @@
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
 
-        /* --- SZKLANE KAFELKI Z ANIMACJĄ "GLEAM" --- */
-        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 15px; width: 100%; }
+        /* --- SZKLANE KAFELKI Z EFEKTEM "SMART EXPAND" --- */
+        /* Zwiększona minimalna szerokość kafelka dla dłuższych nicków */
+        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         
         .card { 
-            /* ZMIANA: Szklane tło bez ciemnego koloru */
             background: rgba(255, 255, 255, 0.03); 
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -133,6 +132,7 @@
             border-radius: 8px; 
             display: flex; 
             align-items: center; 
+            gap: 15px; /* Równe odstępy miedzy elementami */
             position: relative; 
             overflow: hidden; 
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -142,7 +142,7 @@
             transform: translateZ(0); will-change: transform, box-shadow, background;
         }
 
-        /* Efekt przelatującego światła (Gleam) */
+        /* Efekt świetlny "Gleam" */
         .card::before {
             content: '';
             position: absolute;
@@ -154,37 +154,52 @@
         }
 
         .card:hover { 
-            /* ZMIANA: Delikatne zabarwienie w kolorze motywu, zamiast ciężkiego czarnego tła */
             background: rgba(var(--theme-rgb), 0.15);
             border-color: var(--theme); 
             transform: translateY(-7px) scale(1.02); 
             box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5), 0 0 25px var(--theme-glow);
         }
 
-        .card:hover::before {
-            left: 150%;
-        }
-
+        .card:hover::before { left: 150%; }
         .card > * { z-index: 2; position: relative; }
 
-        .ping-badge { font-size: 0.75rem; font-family: monospace; font-weight: bold; color: var(--theme); opacity: 0.9; margin-right: 15px; transition: 0.3s; }
+        .ping-badge { font-size: 0.75rem; font-family: monospace; font-weight: bold; color: var(--theme); opacity: 0.9; transition: 0.3s; flex-shrink: 0; }
         
         .id-box { 
-            background: rgba(255, 255, 255, 0.05); /* Szklana pastylka zamiast czarnej */
+            background: rgba(255, 255, 255, 0.05); 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             color: var(--theme); font-weight: bold; padding: 4px 10px; border-radius: 6px; 
-            margin-right: 15px; font-family: monospace; transition: 0.3s; 
+            font-family: monospace; transition: 0.3s; flex-shrink: 0; 
         }
         
-        .nick-txt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; transition: 0.3s; color: var(--text); }
+        /* KLUCZOWA ZMIANA: Dynamiczny tekst (nie ucina) */
+        .nick-txt { 
+            flex: 1; /* Zabiera całą dostępną przestrzeń z prawej */
+            min-width: 0; /* Ważne, żeby Flexbox nie psuł skracania */
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            font-weight: 600; 
+            font-size: 1.05rem; 
+            color: var(--text); 
+            transition: color 0.3s; 
+            padding-right: 28px; /* Margines bezpieczeństwa, żeby tekst nie wszedł pod gwiazdkę */
+        }
 
-        /* Zmiany kolorów tekstu na hover - jaśniejszy motyw, żeby pasował do szkła */
+        /* Rozwijanie długiego nicku po najechaniu na kafelek */
+        .card:hover .nick-txt { 
+            white-space: normal; /* Pozwala na ułożenie tekstu w 2-3 linijkach */
+            word-wrap: break-word; /* Łamie baaardzo długie wyrazy */
+            overflow: visible;
+            color: #fff; 
+            text-shadow: 0 0 5px var(--theme-glow); 
+        }
+
         .card:hover .ping-badge { color: #fff; text-shadow: 0 0 5px var(--theme-glow); }
         .card:hover .id-box { background: var(--theme); color: #000; border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
-        .card:hover .nick-txt { color: #fff; text-shadow: 0 0 5px var(--theme-glow); }
 
         .fav-btn {
-            position: absolute; top: 8px; right: 10px;
+            position: absolute; top: 12px; right: 10px;
             background: transparent !important; border: none !important;
             color: rgba(255,255,255,0.2) !important; font-size: 1.2rem; 
             cursor: pointer; transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 0; 
