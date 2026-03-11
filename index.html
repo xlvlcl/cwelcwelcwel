@@ -30,6 +30,7 @@
             overflow-x: hidden;
         }
 
+        /* --- TŁO (MESH GRADIENT) --- */
         .background-fx {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -43,6 +44,7 @@
 
         .wrapper { width: 100%; max-width: 1300px; position: relative; padding-bottom: 50px; }
 
+        /* --- SYSTEM STATUS --- */
         .system-status {
             position: absolute; top: 0; left: 0;
             display: flex; flex-direction: column; gap: 8px;
@@ -57,6 +59,7 @@
         .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
         .status-label { color: var(--theme); text-transform: uppercase; }
 
+        /* THEME PANEL */
         .theme-panel {
             position: absolute; top: 0; right: 0;
             display: flex; align-items: center; gap: 10px;
@@ -70,6 +73,7 @@
         .color-preview:hover { transform: scale(1.1); }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
 
+        /* --- NAGŁÓWEK --- */
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
         h1 { 
             font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; 
@@ -78,6 +82,7 @@
             margin-bottom: 5px; transition: 0.5s;
         }
 
+        /* CONTROLS */
         .controls { 
             background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); padding: 25px; 
             border-radius: 12px; display: flex; flex-wrap: wrap; gap: 20px; 
@@ -102,6 +107,7 @@
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
 
+        /* --- SZKLANE KAFELKI --- */
         #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         
         .card { 
@@ -146,7 +152,7 @@
             font-weight: 600; 
             font-size: 1.05rem; 
             color: var(--text); 
-            padding-right: 28px;
+            padding-right: 28px; 
             line-height: 1.2;
         }
 
@@ -210,7 +216,7 @@
     let showList = true;
     let favs = JSON.parse(localStorage.getItem('grandrp_favs')) || [];
     let renderTimeout;
-    let totalOnlineCount = 0;
+    let totalOnline = 0;
 
     function hexToRgb(hex) {
         let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -239,26 +245,20 @@
         const title = document.getElementById('mainTitle');
         let sID = select.value === 'custom' ? document.getElementById('customSrv').value : select.value;
         
-        if(sID === '8rml8v') title.innerText = "GrandRP Finder";
-        else if(sID === 'z75e35') title.innerText = "BetterSide Finder";
-        else title.innerText = "Server Finder";
-
         if (!sID) return;
         document.getElementById('refreshBtn').innerText = "...";
 
         try {
-            // ZMIANA: Lepsze proxy, które nie blokuje nagłówków FiveM
-            const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://servers-frontend.fivem.net/api/servers/single/' + sID)}`);
-            const data = await response.json();
+            // KLUCZOWA ZMIANA: Pobieranie przez proxy raw z obsługą nagłówków FiveM
+            const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://servers-frontend.fivem.net/api/servers/single/' + sID)}`);
+            const data = await res.json();
             
             if (data && data.Data) {
                 players = data.Data.players || [];
-                totalOnlineCount = data.Data.clients || players.length;
+                totalOnline = data.Data.clients || players.length;
                 render();
             }
-        } catch(e) { 
-            console.error("Błąd API:", e); 
-        }
+        } catch(e) { console.error("Błąd pobierania danych"); }
         document.getElementById('refreshBtn').innerText = "ODŚWIEŻ";
     }
 
@@ -281,7 +281,9 @@
             return a.id - b.id;             
         });
 
-        counter.innerHTML = `Online: <strong>${(idVal || nickVal) ? filtered.length : totalOnlineCount}</strong>`;
+        // Licznik pokazuje faktyczną liczbę online z API (totalOnline) lub liczbę z filtrów
+        counter.innerHTML = `Online: <strong>${(idVal || nickVal) ? filtered.length : totalOnline}</strong>`;
+        
         if (!showList) { grid.innerHTML = ""; return; }
 
         grid.innerHTML = filtered.map((p, index) => {
@@ -290,7 +292,7 @@
             <div class="card" style="animation-delay: ${Math.min(index * 0.015, 0.5)}s">
                 <div class="ping-badge">${p.ping || 20}ms</div>
                 <div class="id-box">#${p.id}</div>
-                <div class="nick-txt">${p.name}</div>
+                <div class="nick-txt" title="${p.name}">${p.name}</div>
                 <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav(${p.id})">${isFav ? '★' : '☆'}</button>
             </div>
             `;
