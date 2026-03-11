@@ -30,6 +30,7 @@
             overflow-x: hidden;
         }
 
+        /* --- TŁO (MESH GRADIENT) --- */
         .background-fx {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -43,95 +44,149 @@
 
         .wrapper { width: 100%; max-width: 1300px; position: relative; padding-bottom: 50px; }
 
+        /* --- SYSTEM STATUS --- */
         .system-status {
             position: absolute; top: 0; left: 0;
             display: flex; flex-direction: column; gap: 8px;
             padding: 10px 15px; background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px); border: 1px solid var(--theme); 
-            box-shadow: 0 0 10px var(--theme-glow); border-radius: 8px; z-index: 200;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--theme); 
+            box-shadow: 0 0 10px var(--theme-glow); 
+            border-radius: 8px; z-index: 200;
         }
         .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; }
-        .dot.online { background: #00ff88; box-shadow: 0 0 8px #00ff88; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
+        .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
         .status-label { color: var(--theme); text-transform: uppercase; }
 
+        /* THEME PANEL */
         .theme-panel {
             position: absolute; top: 0; right: 0;
             display: flex; align-items: center; gap: 10px;
             padding: 8px 15px; background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(10px); border: 1px solid var(--theme);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--theme);
             border-radius: 8px; box-shadow: 0 0 15px var(--theme-glow);
             z-index: 200;
         }
-        .color-preview { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; }
+        .color-preview { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; box-shadow: 0 0 8px var(--theme-glow); transition: 0.3s; }
+        .color-preview:hover { transform: scale(1.1); }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
 
+        /* --- NAGŁÓWEK --- */
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
         h1 { 
             font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; 
             background: linear-gradient(to bottom, #fff 40%, #999 100%); 
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            margin-bottom: 5px; transition: 0.5s;
         }
 
+        /* CONTROLS */
         .controls { 
-            background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(15px); padding: 25px; 
+            background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); padding: 25px; 
             border-radius: 12px; display: flex; flex-wrap: wrap; gap: 20px; 
             justify-content: center; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; 
         }
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
-        label { font-size: 0.7rem; color: var(--theme); font-weight: bold; text-transform: uppercase; }
+        label { font-size: 0.7rem; color: var(--theme); font-weight: bold; text-transform: uppercase; margin-left: 5px; }
         input, select { 
             background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; 
             padding: 14px; border-radius: 8px; outline: none; transition: 0.3s; 
         }
-        input:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
+        input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); background: rgba(0,0,0,0.6); }
         
         .btn-group button { 
-            padding: 12px 25px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); 
+            padding: 12px 30px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); 
             color: var(--theme); border-radius: 8px; cursor: pointer; font-weight: bold; 
             text-transform: uppercase; transition: 0.3s; height: 48px;
         }
-        .btn-group button:hover, .btn-group button.active { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
+        .btn-group button:hover { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
 
-        .stats-bar { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; }
-        #counter { font-size: 2.2rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+        .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 25px 0; width: 100%; }
+        #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
 
-        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 20px; width: 100%; }
+        /* --- TWOJE ORYGINALNE SZKLANE KAFELKI --- */
+        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         
         .card { 
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15); border-left: 5px solid var(--theme); 
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 20px rgba(0,0,0,0.3);
-            padding: 18px 22px; border-radius: 12px; display: flex; align-items: center; gap: 15px; 
-            position: relative; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); animation: fadeIn 0.4s ease forwards;
-        }
-        .card:hover { 
-            background: linear-gradient(135deg, rgba(var(--theme-rgb), 0.2) 0%, rgba(255, 255, 255, 0.05) 100%); 
-            border-color: var(--theme); transform: translateY(-5px) scale(1.02); 
-            box-shadow: 0 15px 25px rgba(0,0,0,0.5), 0 0 20px var(--theme-glow);
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-left: 4px solid var(--theme); 
+            padding: 12px 18px; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            position: relative; 
+            overflow: hidden; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            animation: fadeIn 0.4s ease forwards;
+            opacity: 0;
+            transform: translateY(10px) scale(1);
+            transform: translateZ(0); will-change: transform, box-shadow, background;
         }
 
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%; width: 100%; height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: all 0.6s ease-in-out;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .card:hover { 
+            background: rgba(var(--theme-rgb), 0.15);
+            border-color: var(--theme); 
+            transform: translateY(-7px) scale(1.02); 
+            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5), 0 0 25px var(--theme-glow);
+        }
+
+        .card:hover::before { left: 150%; }
+        .card > * { z-index: 2; position: relative; }
+
+        .ping-badge { font-size: 0.75rem; font-family: monospace; font-weight: bold; color: var(--theme); opacity: 0.9; transition: 0.3s; flex-shrink: 0; }
+        
         .id-box { 
-            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); 
-            color: var(--theme); font-weight: bold; padding: 6px 12px; 
-            border-radius: 8px; font-family: monospace; font-size: 1.1rem;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            color: var(--theme); font-weight: bold; padding: 4px 10px; border-radius: 6px; 
+            font-family: monospace; transition: 0.3s; flex-shrink: 0; 
         }
+        
         .nick-txt { 
-            flex: 1; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; 
-            white-space: nowrap; font-size: 1.15rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+            flex: 1; 
+            min-width: 0; 
+            white-space: normal; 
+            word-wrap: break-word; 
+            overflow: visible; 
+            font-weight: 600; 
+            font-size: 1.05rem; 
+            color: var(--text); 
+            transition: color 0.3s; 
+            padding-right: 28px; 
+            line-height: 1.2;
         }
+
+        .card:hover .ping-badge { color: #fff; text-shadow: 0 0 5px var(--theme-glow); }
+        .card:hover .id-box { background: var(--theme); color: #000; border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
+        .card:hover .nick-txt { color: #fff; text-shadow: 0 0 5px var(--theme-glow); }
 
         .fav-btn {
-            background: transparent; border: none; color: rgba(255,255,255,0.2); 
-            font-size: 1.5rem; cursor: pointer; transition: 0.3s;
+            position: absolute; top: 50%; right: 10px; transform: translateY(-50%); 
+            background: transparent !important; border: none !important;
+            color: rgba(255,255,255,0.2) !important; font-size: 1.2rem; 
+            cursor: pointer; transition: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); padding: 0; 
+            box-shadow: none !important; height: auto; outline: none; line-height: 1; z-index: 5;
         }
-        .fav-btn:hover { transform: scale(1.2); }
-        .fav-btn.active { color: var(--gold); filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.5)); }
+        .fav-btn:hover { color: var(--gold) !important; transform: translateY(-50%) scale(1.3) rotate(15deg) !important; }
+        .fav-btn.active { color: var(--gold) !important; filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.8)); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0) scale(1); } }
         .hidden-input { display: none; }
     </style>
 </head>
@@ -141,13 +196,13 @@
 
 <div class="wrapper">
     <div class="system-status">
-        <div class="status-item"><div class="dot online"></div><span class="status-label">FiveM:</span> <span>ONLINE</span></div>
-        <div class="status-item"><div class="dot online"></div><span class="status-label">Steam:</span> <span>ONLINE</span></div>
+        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">FiveM:</span> <span id="fivem-text">ONLINE</span></div>
+        <div class="status-item"><div id="steam-dot" class="dot online"></div><span class="status-label">Steam:</span> <span id="steam-text">ONLINE</span></div>
     </div>
 
     <div class="theme-panel">
-        <span style="font-size: 0.7rem; font-weight: bold; color: var(--theme);">MOTYW:</span>
-        <div class="color-preview" id="colorPrev"><input type="color" id="themePicker" value="#0055FF"></div>
+        <span class="theme-label" style="font-size: 0.7rem; font-weight: bold; color: var(--theme);">MOTYW:</span>
+        <div class="color-preview"><input type="color" id="themePicker" value="#0055FF"></div>
     </div>
 
     <header>
@@ -172,9 +227,7 @@
         </div>
     </div>
 
-    <div class="stats-bar">
-        <div id="counter">Online: <strong>...</strong></div>
-    </div>
+    <div class="stats-bar"><span id="counter">Online: <strong>0</strong></span></div>
     
     <div id="grid"></div>
 </div>
@@ -186,10 +239,16 @@
     let favs = JSON.parse(localStorage.getItem('grandrp_favs')) || [];
     let renderTimeout;
 
+    function hexToRgb(hex) {
+        let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 85, 255';
+    }
+
     function setTheme(color) {
         document.documentElement.style.setProperty('--theme', color);
+        document.documentElement.style.setProperty('--theme-rgb', hexToRgb(color));
         document.documentElement.style.setProperty('--theme-glow', color + '66');
-        document.getElementById('colorPrev').style.backgroundColor = color;
+        document.querySelector('.color-preview').style.backgroundColor = color;
         localStorage.setItem('grandrp_theme', color);
     }
     document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
@@ -203,7 +262,7 @@
         
         if (!sID) return;
         
-        // Aktualizacja tytułu w zależności od wybranego serwera
+        // Aktualizacja tytułu
         if(select.value === '8rml8v') title.innerText = "GrandRP Finder";
         else if(select.value === 'z75e35') title.innerText = "BetterSide Finder";
         else title.innerText = "Server Finder";
@@ -212,6 +271,7 @@
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
+        // Proxy uodparniające na bany
         const proxies = [
             `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
             `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
@@ -232,7 +292,7 @@
                     break;
                 }
             } catch (e) {
-                console.log("To proxy ma tymczasowego bana, przeskakuje na kolejne...");
+                console.log("Przeskakuje na kolejne proxy...");
             }
         }
 
@@ -251,33 +311,41 @@
         const counter = document.getElementById('counter');
 
         let filtered = players.filter(p => 
-            (sidVal ? p.id.toString().includes(sidVal) : true) &&
+            (sidVal ? p.id.toString().startsWith(sidVal) : true) &&
             (nickVal ? p.name.toLowerCase().includes(nickVal) : true)
         );
 
+        // Najpierw ulubieni
         filtered.sort((a, b) => {
             let aFav = favs.includes(a.id);
             let bFav = favs.includes(b.id);
-            return (aFav === bFav) ? a.id - b.id : aFav ? -1 : 1;
+            if (aFav && !bFav) return -1; 
+            if (!aFav && bFav) return 1;  
+            return a.id - b.id;           
         });
 
         counter.innerHTML = `Online: <strong>${(sidVal || nickVal) ? filtered.length : totalClients}</strong>`;
 
-        if (!showList) {
-            grid.innerHTML = "";
-            return;
+        if (!showList) { 
+            grid.innerHTML = ""; 
+            return; 
         }
 
         if (players.length === 0) {
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Serwer aktualnie ukrywa listę graczy (Privacy Mode).</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Serwer ukrywa listę graczy.</p>";
         } else {
-            grid.innerHTML = filtered.map(p => {
+            // Generowanie Twoich oryginalnych kafelków
+            grid.innerHTML = filtered.map((p, index) => {
                 let isFav = favs.includes(p.id);
+                let favClass = isFav ? 'active' : '';
+                let favIcon = isFav ? '★' : '☆'; 
+
                 return `
-                <div class="card">
+                <div class="card" style="animation-delay: ${Math.min(index * 0.015, 0.5)}s">
+                    <div class="ping-badge">${p.ping || 20}ms</div>
                     <div class="id-box">#${p.id}</div>
-                    <div class="nick-txt">${p.name}</div>
-                    <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFav(${p.id})">★</button>
+                    <div class="nick-txt" title="${p.name}">${p.name}</div>
+                    <button class="fav-btn ${favClass}" onclick="toggleFav(${p.id})">${favIcon}</button>
                 </div>
                 `;
             }).join('');
@@ -287,8 +355,13 @@
     function toggleList() {
         showList = !showList;
         const btn = document.getElementById('btnToggle');
-        btn.innerText = showList ? "Ukryj listę" : "Pokaż listę";
-        btn.classList.toggle('active', showList);
+        if (showList) {
+            btn.innerText = "Ukryj listę";
+            btn.classList.add('active');
+        } else {
+            btn.innerText = "Pokaż listę";
+            btn.classList.remove('active');
+        }
         render();
     }
 
@@ -296,7 +369,7 @@
         if (favs.includes(id)) favs = favs.filter(f => f !== id);
         else favs.push(id);
         localStorage.setItem('grandrp_favs', JSON.stringify(favs));
-        render();
+        render(); 
     }
 
     function renderDebounced() {
@@ -308,13 +381,12 @@
         const selectVal = document.getElementById('serverSelect').value;
         document.getElementById('customSrv').style.display = selectVal === 'custom' ? 'block' : 'none';
         
-        // --- ZAPISYWANIE WYBORU DO PAMIĘCI ---
+        // Zapisywanie wybranego serwera do pamięci
         localStorage.setItem('grandrp_last_server', selectVal);
-        
         getData();
     }
 
-    // --- INICJALIZACJA PRZY WEJŚCIU NA STRONĘ ---
+    // --- START ---
     const savedTheme = localStorage.getItem('grandrp_theme');
     if(savedTheme) setTheme(savedTheme);
 
@@ -326,7 +398,6 @@
         }
     }
 
-    // Dodatkowo zapisujemy wpisane ID własnego serwera
     document.getElementById('customSrv').addEventListener('input', (e) => {
         localStorage.setItem('grandrp_custom_id', e.target.value);
     });
@@ -334,6 +405,7 @@
     if(savedCustom) document.getElementById('customSrv').value = savedCustom;
 
     getData();
+    // Odświeżanie co 60 sekund by unikać banów IP
     setInterval(getData, 60000); 
 </script>
 </body>
