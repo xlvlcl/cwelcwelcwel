@@ -165,7 +165,7 @@
 
     <div class="stats-bar">
         <div id="counter">Online: <strong>0</strong></div>
-        <div id="statusMsg">Trwa łączenie...</div>
+        <div id="statusMsg">Oczekiwanie na dane...</div>
     </div>
     
     <div id="grid"></div>
@@ -173,7 +173,7 @@
 
 <script>
     let players = [];
-    let totalOnlineCount = 0;
+    let totalClients = 0;
     let favs = JSON.parse(localStorage.getItem('grandrp_favs')) || [];
     let renderTimeout;
 
@@ -189,43 +189,40 @@
         const select = document.getElementById('serverSelect');
         const custom = document.getElementById('customSrv');
         let sID = select.value === 'custom' ? custom.value : select.value;
-        
         if (!sID) return;
-        const msg = document.getElementById('statusMsg');
-        msg.innerText = "Próba ominięcia blokady FiveM (Metoda 1/2)...";
 
-        // Dodajemy losowy parametr do URL, żeby ominąć cache
-        const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}?t=${Date.now()}`;
-        
-        // Próbujemy kilku różnych proxy w pętli
-        const proxyUrls = [
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-            `https://thingproxy.freeboard.io/fetch/${targetUrl}`
+        const msg = document.getElementById('statusMsg');
+        msg.innerText = "Pobieranie danych (AllOrigins)...";
+
+        // UŻYWAMY DOKŁADNIE TEGO SAMEGO SPOSOBU CO W POPRZEDNIM KODZIE
+        const proxies = [
+            `https://api.allorigins.win/raw?url=`,
+            `https://corsproxy.io/?`
         ];
 
-        let data = null;
-        for (let url of proxyUrls) {
+        let success = false;
+        for (let proxy of proxies) {
             try {
+                const url = `${proxy}https://servers-frontend.fivem.net/api/servers/single/${sID}`;
                 const res = await fetch(url);
-                if (res.ok) {
-                    data = await res.json();
-                    if (data && data.Data) break;
+                const data = await res.json();
+
+                if (data && data.Data) {
+                    players = data.Data.players || [];
+                    totalClients = data.Data.clients || players.length;
+                    success = true;
+                    break;
                 }
-            } catch (e) { 
-                console.log("Proxy " + url + " zawiodło.");
-                msg.innerText = "Metoda zawiodła, szukam innej drogi...";
+            } catch (e) {
+                console.error("Błąd proxy");
             }
         }
 
-        if (data && data.Data) {
-            players = data.Data.players || [];
-            totalOnlineCount = data.Data.clients || players.length;
-            msg.innerText = "Dane pobrane pomyślnie.";
+        if (success) {
+            msg.innerText = "Dane załadowane.";
             render();
         } else {
-            msg.innerText = "Błąd: FiveM blokuje zapytanie. Odśwież za chwilę.";
-            document.getElementById('counter').innerHTML = "Online: <strong style='color:#ff4444'>BŁĄD</strong>";
+            msg.innerText = "Błąd połączenia. FiveM może blokować zapytanie.";
         }
     }
 
@@ -246,10 +243,10 @@
             return (aFav === bFav) ? a.id - b.id : aFav ? -1 : 1;
         });
 
-        counter.innerHTML = `Online: <strong>${(sidVal || nickVal) ? filtered.length : totalOnlineCount}</strong>`;
+        counter.innerHTML = `Online: <strong>${(sidVal || nickVal) ? filtered.length : totalClients}</strong>`;
 
-        if (players.length === 0) {
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Serwer ukrywa pełną listę graczy (Privacy Mode).</p>";
+        if (players.length === 0 && success) {
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Serwer ukrywa listę graczy.</p>";
         } else {
             grid.innerHTML = filtered.map(p => {
                 let isFav = favs.includes(p.id);
@@ -284,8 +281,7 @@
     const savedTheme = localStorage.getItem('grandrp_theme');
     if(savedTheme) setTheme(savedTheme);
     getData();
-    setInterval(getData, 45000);
+    setInterval(getData, 40000);
 </script>
-
 </body>
 </html>
