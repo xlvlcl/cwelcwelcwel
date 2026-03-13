@@ -52,19 +52,12 @@
         .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
         .status-label { color: var(--theme); text-transform: uppercase; }
 
-        /* THEME PANEL & TOP BUTTONS */
+        /* THEME PANEL */
         .theme-panel {
-            position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 15px;
+            position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 10px;
             padding: 8px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
             border: 1px solid var(--theme); border-radius: 8px; box-shadow: 0 0 15px var(--theme-glow); z-index: 200;
         }
-        #viewToggleBtn {
-            background: rgba(0,0,0,0.5); border: 1px solid var(--theme); color: var(--theme);
-            padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: bold;
-            cursor: pointer; transition: 0.3s; text-transform: uppercase;
-        }
-        #viewToggleBtn:hover { background: var(--theme); color: #000; box-shadow: 0 0 10px var(--theme-glow); }
-        .separator { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
         .color-preview { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; transition: 0.3s; }
         .color-preview:hover { transform: scale(1.1); }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
@@ -72,14 +65,11 @@
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
         h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; transition: 0.5s; }
 
-        /* WSPÓLNE PANELE (Szkło) */
-        .glass-panel {
+        /* CONTROLS */
+        .controls { 
             background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(15px); padding: 25px; 
-            border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; 
+            border-radius: 12px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; 
         }
-
-        /* CONTROLS (WIDOK GRACZY) */
-        .controls { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
         label { font-size: 0.7rem; color: var(--theme); font-weight: bold; text-transform: uppercase; margin-left: 5px; }
         input, select { background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 14px; border-radius: 8px; outline: none; transition: 0.3s; }
@@ -92,7 +82,7 @@
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
 
-        /* --- KAFELKI GRACZY --- */
+        /* --- KAFELKI --- */
         #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         .card { 
             background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -109,43 +99,10 @@
         .card:hover .ping-badge, .card:hover .nick-txt { color: #fff; text-shadow: 0 0 5px var(--theme-glow); }
         .card:hover .id-box { background: var(--theme); color: #000; border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
 
-        /* Gwiazdki graczy */
         .fav-btn { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: transparent !important; border: none !important; color: rgba(255,255,255,0.2) !important; font-size: 1.2rem; cursor: pointer; transition: 0.3s; padding: 0; outline: none; z-index: 5; }
         .fav-btn:hover { color: var(--gold) !important; transform: translateY(-50%) scale(1.3) rotate(15deg) !important; }
         .fav-btn.active { color: var(--gold) !important; filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.8)); }
         .hidden-input { display: none; }
-
-        /* --- WIDOK LISTY SERWERÓW --- */
-        #serverListView { display: none; width: 100%; animation: fadeIn 0.4s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .server-search-box { position: relative; width: 100%; max-width: 600px; margin: 0 auto 25px auto; }
-        .server-search-box input { width: 100%; background: rgba(0,0,0,0.5); padding: 15px 20px 15px 50px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 1rem; }
-        .server-search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--theme); font-size: 1.4rem; }
-
-        .server-table-container { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-        .server-table { width: 100%; border-collapse: collapse; text-align: left; background: rgba(0,0,0,0.2); }
-        .server-table th { color: #888; font-size: 0.75rem; text-transform: uppercase; padding: 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); }
-        .server-table td { padding: 18px 30px; border-bottom: 1px solid rgba(255,255,255,0.02); color: #ddd; vertical-align: middle; }
-        .server-table tr { transition: background 0.2s; }
-        .server-table tr:hover { background: rgba(255,255,255,0.05); }
-        
-        .srv-rank { color: #888; font-weight: bold; width: 50px; }
-        .srv-name { font-weight: 600; color: #fff; font-size: 1.05rem; }
-        .srv-players { color: #aaa; font-size: 0.85rem; font-weight: normal; margin-left: 15px; background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 6px; }
-        .srv-code { background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 6px; font-family: monospace; color: var(--theme); border: 1px solid rgba(255,255,255,0.05); }
-        
-        /* Gwiazdki serwerów */
-        .srv-fav-btn { background: transparent; border: none; font-size: 1.4rem; cursor: pointer; color: rgba(255,255,255,0.2); transition: 0.3s; margin-right: 15px; }
-        .srv-fav-btn:hover { color: var(--gold); transform: scale(1.2) rotate(15deg); }
-        .srv-fav-btn.active { color: var(--gold); filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.8)); }
-
-        .btn-select {
-            background: linear-gradient(135deg, var(--theme) 0%, #8A2BE2 100%);
-            color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer;
-            font-weight: 600; font-size: 0.9rem; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-transform: uppercase;
-        }
-        .btn-select:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--theme-glow); filter: brightness(1.2); }
     </style>
 </head>
 <body>
@@ -158,8 +115,6 @@
     </div>
     
     <div class="theme-panel">
-        <button id="viewToggleBtn" onclick="toggleMainView()">🔍 Lista Serwerów</button>
-        <div class="separator"></div>
         <span class="theme-label" style="font-size: 0.7rem; font-weight: bold; color: var(--theme);">MOTYW:</span>
         <div class="color-preview"><input type="color" id="themePicker" value="#0055FF"></div>
     </div>
@@ -168,67 +123,35 @@
         <h1 id="mainTitle">GrandRP Finder</h1>
     </header>
 
-    <div id="playerView">
-        <div class="glass-panel controls">
-            <div class="input-group">
-                <label>Serwer</label>
-                <select id="serverSelect" onchange="checkCustomServer()">
-                    <option value="96ky6e" selected>GrandRP (PL)</option>
-                    <option value="z75e35">BetterSide</option>
-                    <option value="custom">-- Wybrany z listy --</option>
-                </select>
-                <input type="text" id="customSrv" class="hidden-input" placeholder="Wpisz ID serwera (np. epk8gp)">
-            </div>
-            <div class="input-group"><label>Szukaj ID</label><input type="number" id="sid" placeholder="np. 123" oninput="renderDebounced()"></div>
-            <div class="input-group"><label>Szukaj Nicku</label><input type="text" id="snick" placeholder="np. imie" oninput="renderDebounced()"></div>
-            <div class="btn-group" style="padding-top: 19px; display: flex; gap: 10px;">
-                <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
-                <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
-            </div>
+    <div class="controls">
+        <div class="input-group">
+            <label>Serwer</label>
+            <select id="serverSelect" onchange="checkCustomServer()">
+                <option value="96ky6e" selected>GrandRP (PL)</option>
+                <option value="z75e35">BetterSide</option>
+                <option value="custom">-- Własne ID --</option>
+            </select>
+            <input type="text" id="customSrv" class="hidden-input" placeholder="Wpisz ID serwera (np. epk8gp)">
         </div>
-
-        <div class="stats-bar"><span id="counter">Online: <strong>0</strong></span></div>
-        <div id="grid"></div>
-    </div>
-
-    <div id="serverListView" class="glass-panel">
-        <div class="server-search-box">
-            <span class="server-search-icon">🔍</span>
-            <input type="text" id="serverSearch" placeholder="Wpisz min. 2 znaki nazwy lub kodu serwera..." oninput="onSearchInput()">
-        </div>
-        <div class="server-table-container">
-            <table class="server-table">
-                <thead>
-                    <tr>
-                        <th width="5%">FAV</th>
-                        <th width="10%">TOP</th>
-                        <th width="50%">NAZWA SERWERA</th>
-                        <th width="20%">KOD (ID)</th>
-                        <th width="15%">DOŁĄCZ</th>
-                    </tr>
-                </thead>
-                <tbody id="serverTableBody">
-                    </tbody>
-            </table>
+        <div class="input-group"><label>Szukaj ID</label><input type="number" id="sid" placeholder="np. 123" oninput="renderDebounced()"></div>
+        <div class="input-group"><label>Szukaj Nicku</label><input type="text" id="snick" placeholder="np. imie" oninput="renderDebounced()"></div>
+        <div class="btn-group" style="padding-top: 19px; display: flex; gap: 10px;">
+            <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
+            <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
         </div>
     </div>
+
+    <div class="stats-bar"><span id="counter">Online: <strong>0</strong></span></div>
+    
+    <div id="grid"></div>
 </div>
 
 <script>
-    // --- STANY APLIKACJI ---
-    let currentView = 'players'; 
     let players = [];
     let totalClients = 0;
     let showList = true;
     let favs = JSON.parse(localStorage.getItem('grandrp_favs')) || [];
     let renderTimeout;
-    let previousSelectValue = "96ky6e";
-
-    // Zmienne bazy serwerów
-    let allFivemServers = [];
-    let isFetchingServers = false;
-    let fetchError = false;
-    let favServers = JSON.parse(localStorage.getItem('grandrp_favServers')) || [];
 
     function hexToRgb(hex) {
         let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -244,206 +167,6 @@
     }
     document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
 
-    // --- SYSTEM PRZEŁĄCZANIA WIDOKÓW ---
-    function toggleMainView() {
-        const btn = document.getElementById('viewToggleBtn');
-        const pView = document.getElementById('playerView');
-        const sView = document.getElementById('serverListView');
-
-        if (currentView === 'players') {
-            pView.style.display = 'none';
-            sView.style.display = 'block';
-            btn.innerText = '🔙 Wróć do Graczy';
-            currentView = 'servers';
-            // Nie pobieramy jeszcze serwerów - czekamy aż użytkownik coś wpisze
-            renderServerList(); 
-        } else {
-            pView.style.display = 'block';
-            sView.style.display = 'none';
-            btn.innerText = '🔍 Lista Serwerów';
-            currentView = 'players';
-        }
-    }
-
-    function checkCustomServer() {
-        const select = document.getElementById('serverSelect');
-        const customSrv = document.getElementById('customSrv');
-        
-        previousSelectValue = select.value; 
-        customSrv.style.display = select.value === 'custom' ? 'block' : 'none';
-        localStorage.setItem('grandrp_last_server', select.value);
-        
-        // Reset nazwy dla standardowych
-        if(select.value === '96ky6e') localStorage.setItem('grandrp_custom_name', 'GrandRP (PL)');
-        else if(select.value === 'z75e35') localStorage.setItem('grandrp_custom_name', 'BetterSide');
-        
-        getData(true); 
-    }
-
-    // --- LOGIKA ULUBIONYCH SERWERÓW ---
-    function toggleServerFav(code) {
-        if (favServers.includes(code)) favServers = favServers.filter(c => c !== code); 
-        else favServers.push(code);
-        
-        localStorage.setItem('grandrp_favServers', JSON.stringify(favServers)); 
-        renderServerList(); 
-    }
-
-    // --- INTELIGENTNE POBIERANIE BAZY ---
-    function onSearchInput() {
-        const query = document.getElementById('serverSearch').value.trim();
-        
-        // Zaczynamy szukać i pobierać tylko gdy wpisano minimum 2 znaki i baza jest jeszcze pusta
-        if (query.length >= 2 && allFivemServers.length === 0 && !isFetchingServers && !fetchError) {
-            fetchOfficialFivemServers();
-        } else {
-            renderServerList();
-        }
-    }
-
-    async function fetchOfficialFivemServers() {
-        isFetchingServers = true; fetchError = false;
-        renderServerList(); // Pokazuje napis "Pobieranie..."
-
-        const targetUrl = 'https://servers-frontend.fivem.net/api/servers/streamRedir/';
-        const proxySources = [
-            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
-        ];
-
-        let success = false;
-        let data = null;
-
-        for (let proxy of proxySources) {
-            try {
-                const response = await fetch(proxy);
-                if (!response.ok) continue;
-                data = await response.json();
-                if (data && Array.isArray(data)) { success = true; break; }
-            } catch(e) { }
-        }
-
-        if (success && data) {
-            try {
-                allFivemServers = data.map(server => {
-                    let sData = server.Data || {};
-                    let rawName = sData.hostname || sData.sv_projectName || "Nieznany serwer";
-                    let cleanName = rawName.replace(/\^./g, '').trim(); 
-                    
-                    return {
-                        name: cleanName,
-                        code: server.EndPoint, 
-                        clients: sData.clients || 0,
-                        maxClients: sData.sv_maxclients || 32
-                    };
-                });
-
-                allFivemServers.sort((a, b) => b.clients - a.clients);
-                allFivemServers.forEach((s, index) => s.rank = index + 1);
-            } catch (error) { fetchError = true; }
-        } else { fetchError = true; }
-
-        isFetchingServers = false;
-        renderServerList(); // Aktualizuje tabelę już po pobraniu danych
-    }
-
-    function renderServerList() {
-        const tbody = document.getElementById('serverTableBody');
-        const searchQuery = document.getElementById('serverSearch').value.toLowerCase().trim();
-
-        // 1. Oczekiwanie na zapytanie
-        if (searchQuery.length < 2) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 60px; color: #888;">
-                Wpisz co najmniej 2 znaki w wyszukiwarkę powyżej, aby rozpocząć poszukiwania...
-            </td></tr>`;
-            return;
-        }
-
-        // 2. Tryb ładowania
-        if (isFetchingServers) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 60px; color: var(--theme);">
-                <strong style="font-size: 1.2rem;">Pobieranie światowej bazy serwerów FiveM...</strong><br><br>
-                <span style="font-size: 0.85rem; color: #888;">Dane są pobierane tylko raz. Za chwilę wyświetlę wyniki dla "${searchQuery}"...</span>
-            </td></tr>`;
-            return;
-        }
-
-        // 3. Tryb błędu
-        if (fetchError || allFivemServers.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 60px; color: #ff5555;">
-                Nie udało się połączyć z API FiveM (zostało odrzucone z powodu przeciążenia). Spróbuj odświeżyć stronę za chwilę.
-            </td></tr>`;
-            return;
-        }
-
-        // 4. Wyświetlanie prawidłowych wyników
-        let filtered = allFivemServers.filter(s => 
-            s.name.toLowerCase().includes(searchQuery) || 
-            (s.code && s.code.toLowerCase().includes(searchQuery))
-        );
-
-        filtered.sort((a, b) => {
-            let aFav = favServers.includes(a.code);
-            let bFav = favServers.includes(b.code);
-            if (aFav && !bFav) return -1;
-            if (!aFav && bFav) return 1;
-            return a.rank - b.rank;
-        });
-
-        const toShow = filtered.slice(0, 100); // Chroni przed lagami przy dużej liczbie wyników
-
-        let html = toShow.map(s => {
-            let playersText = s.clients !== "?" ? `${s.clients}/${s.maxClients} Online` : 'Zabezpieczone API';
-            let isFav = favServers.includes(s.code);
-            let safeName = s.name.replace(/'/g, "\\'"); 
-
-            return `
-            <tr>
-                <td><button class="srv-fav-btn ${isFav ? 'active' : ''}" onclick="toggleServerFav('${s.code}')">${isFav ? '★' : '☆'}</button></td>
-                <td class="srv-rank">#${s.rank}</td>
-                <td>
-                    <div style="display: flex; align-items: center;">
-                        <span class="srv-name">${s.name.substring(0, 60)}${s.name.length > 60 ? '...' : ''}</span>
-                        <span class="srv-players">${playersText}</span>
-                    </div>
-                </td>
-                <td><span class="srv-code">${s.code}</span></td>
-                <td><button class="btn-select" onclick="selectServerFromList('${s.code}', '${safeName}')">Sprawdź</button></td>
-            </tr>
-            `;
-        }).join('');
-
-        if(toShow.length === 0) {
-            html = `<tr><td colspan="5" style="text-align:center; padding: 40px; color:#888;">Nie znaleziono serwera spełniającego kryteria.</td></tr>`;
-        }
-        
-        tbody.innerHTML = html;
-    }
-
-    function selectServerFromList(code, name) {
-        const select = document.getElementById('serverSelect');
-        const customInput = document.getElementById('customSrv');
-        
-        select.value = 'custom';
-        customInput.value = code;
-        customInput.style.display = 'block';
-        previousSelectValue = 'custom';
-        
-        localStorage.setItem('grandrp_last_server', 'custom');
-        localStorage.setItem('grandrp_custom_id', code);
-        
-        let cleanShortName = name.replace(/\[.*?\]/g, '').trim().substring(0, 30); 
-        if(cleanShortName === "") cleanShortName = "Server Finder";
-        
-        localStorage.setItem('grandrp_custom_name', cleanShortName);
-        document.getElementById('mainTitle').innerText = cleanShortName;
-        
-        toggleMainView(); 
-        getData(true); 
-    }
-
-    // --- POBIERANIE GRACZY Z SERWERA ---
     async function getData(isManual = false) {
         const select = document.getElementById('serverSelect');
         const custom = document.getElementById('customSrv');
@@ -456,19 +179,18 @@
         
         if(select.value === '96ky6e') title.innerText = "GrandRP Finder";
         else if(select.value === 'z75e35') title.innerText = "BetterSide Finder";
-        else {
-            const savedName = localStorage.getItem('grandrp_custom_name');
-            title.innerText = savedName ? savedName : "Server Finder";
-        }
+        else title.innerText = "Server Finder";
         
         refreshBtn.innerText = "...";
 
         if (isManual) {
-            players = []; totalClients = 0;
+            players = [];
+            totalClients = 0;
             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Łączenie z serwerem i pobieranie danych...</p>";
         }
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
+        
         const sources = [
             targetUrl,
             `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
@@ -481,20 +203,28 @@
         let tempClients = 0;
         let serverIp = null; 
 
+        // ETAP 1
         for (let source of sources) {
             try {
                 const res = await fetch(source);
                 if (!res.ok) continue; 
+                
                 const data = await res.json();
                 if (data && data.Data) {
                     tempPlayers = data.Data.players || [];
                     tempClients = data.Data.clients || tempPlayers.length;
-                    if (data.Data.connectEndPoints && data.Data.connectEndPoints.length > 0) serverIp = data.Data.connectEndPoints[0];
-                    success = true; break;
+                    
+                    if (data.Data.connectEndPoints && data.Data.connectEndPoints.length > 0) {
+                        serverIp = data.Data.connectEndPoints[0];
+                    }
+                    
+                    success = true;
+                    break;
                 }
             } catch (e) { }
         }
 
+        // ETAP 2: Trick omijający puste listy
         if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
             if(isManual) grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>API ukrywa graczy. Próba bezpośredniego pobrania (Direct IP)...</p>";
             
@@ -509,19 +239,27 @@
                 try {
                     const directRes = await fetch(proxy);
                     if (!directRes.ok) continue;
+                    
                     const directData = await directRes.json();
                     if (Array.isArray(directData) && directData.length > 0) {
-                        tempPlayers = directData; break;
+                        tempPlayers = directData; 
+                        break;
                     }
                 } catch(e) { }
             }
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
+        
         if (success) {
-            if (isManual) { players = tempPlayers; totalClients = tempClients; } 
-            else { if (tempPlayers.length > 0) players = tempPlayers; if (tempClients > 0) totalClients = tempClients; }
-            if (currentView === 'players') render(); 
+            if (isManual) {
+                players = tempPlayers;
+                totalClients = tempClients;
+            } else {
+                if (tempPlayers.length > 0) players = tempPlayers;
+                if (tempClients > 0) totalClients = tempClients;
+            }
+            render();
         } else if (isManual) {
              grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Serwer jest offline lub wpisano błędne ID.</p>";
         }
@@ -541,8 +279,11 @@
         );
 
         filtered.sort((a, b) => {
-            let aFav = favs.includes(a.id); let bFav = favs.includes(b.id);
-            if (aFav && !bFav) return -1; if (!aFav && bFav) return 1; return a.id - b.id;            
+            let aFav = favs.includes(a.id);
+            let bFav = favs.includes(b.id);
+            if (aFav && !bFav) return -1; 
+            if (!aFav && bFav) return 1;  
+            return a.id - b.id;            
         });
 
         counter.innerHTML = `Online: <strong>${(sidVal || nickVal) ? filtered.length : totalClients}</strong>`;
@@ -551,13 +292,16 @@
 
         if (players.length === 0) {
             if (totalClients > 0) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer zablokował dostęp do listy graczy. Widzisz tylko pulę online.</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer całkowicie zablokował dostęp do listy graczy (nawet przez Direct IP).</p>";
             } else {
                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na serwerze.</p>";
             }
         } else {
             grid.innerHTML = filtered.map(p => {
-                let isFav = favs.includes(p.id); let favClass = isFav ? 'active' : ''; let favIcon = isFav ? '★' : '☆'; 
+                let isFav = favs.includes(p.id);
+                let favClass = isFav ? 'active' : '';
+                let favIcon = isFav ? '★' : '☆'; 
+                
                 let playerName = p.name || p.identifiers?.[0] || "Nieznany";
                 let playerPing = p.ping !== undefined ? p.ping : "?";
 
@@ -574,30 +318,48 @@
     }
 
     function toggleList() {
-        showList = !showList; const btn = document.getElementById('btnToggle');
-        if (showList) { btn.innerText = "Ukryj listę"; btn.classList.add('active'); } 
-        else { btn.innerText = "Pokaż listę"; btn.classList.remove('active'); }
+        showList = !showList;
+        const btn = document.getElementById('btnToggle');
+        if (showList) {
+            btn.innerText = "Ukryj listę";
+            btn.classList.add('active');
+        } else {
+            btn.innerText = "Pokaż listę";
+            btn.classList.remove('active');
+        }
         render();
     }
 
     function toggleFav(id) {
-        if (favs.includes(id)) favs = favs.filter(f => f !== id); else favs.push(id);
-        localStorage.setItem('grandrp_favs', JSON.stringify(favs)); render(); 
+        if (favs.includes(id)) favs = favs.filter(f => f !== id);
+        else favs.push(id);
+        localStorage.setItem('grandrp_favs', JSON.stringify(favs));
+        render(); 
     }
 
     function renderDebounced() {
-        clearTimeout(renderTimeout); renderTimeout = setTimeout(render, 150);
+        clearTimeout(renderTimeout);
+        renderTimeout = setTimeout(render, 150);
     }
 
-    // --- INICJALIZACJA STARTOWA ---
+    function checkCustomServer() {
+        const selectVal = document.getElementById('serverSelect').value;
+        document.getElementById('customSrv').style.display = selectVal === 'custom' ? 'block' : 'none';
+        
+        localStorage.setItem('grandrp_last_server', selectVal);
+        getData(true); 
+    }
+
+    // --- START ---
     const savedTheme = localStorage.getItem('grandrp_theme');
     if(savedTheme) setTheme(savedTheme);
 
     const savedServer = localStorage.getItem('grandrp_last_server');
-    if(savedServer && savedServer !== 'list') {
+    if(savedServer) {
         document.getElementById('serverSelect').value = savedServer;
-        previousSelectValue = savedServer;
-        if(savedServer === 'custom') document.getElementById('customSrv').style.display = 'block';
+        if(savedServer === 'custom') {
+            document.getElementById('customSrv').style.display = 'block';
+        }
     }
 
     document.getElementById('customSrv').addEventListener('input', (e) => {
