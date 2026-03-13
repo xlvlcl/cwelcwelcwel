@@ -53,12 +53,19 @@
         .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
         .status-label { color: var(--theme); text-transform: uppercase; }
 
-        /* THEME PANEL */
+        /* THEME PANEL & TOP BUTTONS */
         .theme-panel {
-            position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 10px;
+            position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 15px;
             padding: 8px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
             border: 1px solid var(--theme); border-radius: 8px; box-shadow: 0 0 15px var(--theme-glow); z-index: 200;
         }
+        #openListBtn {
+            background: rgba(0,0,0,0.5); border: 1px solid var(--theme); color: var(--theme);
+            padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; font-weight: bold;
+            cursor: pointer; transition: 0.3s; text-transform: uppercase;
+        }
+        #openListBtn:hover { background: var(--theme); color: #000; box-shadow: 0 0 10px var(--theme-glow); }
+        .separator { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
         .color-preview { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; transition: 0.3s; }
         .color-preview:hover { transform: scale(1.1); }
         #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
@@ -174,7 +181,10 @@
     <div class="system-status">
         <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">FiveM:</span> <span id="fivem-text">ONLINE</span></div>
     </div>
+    
     <div class="theme-panel">
+        <button id="openListBtn" onclick="openModal()">🔍 Lista Serwerów</button>
+        <div class="separator"></div>
         <span class="theme-label" style="font-size: 0.7rem; font-weight: bold; color: var(--theme);">MOTYW:</span>
         <div class="color-preview"><input type="color" id="themePicker" value="#0055FF"></div>
     </div>
@@ -190,7 +200,6 @@
                 <option value="96ky6e" selected>GrandRP (PL)</option>
                 <option value="z75e35">BetterSide</option>
                 <option value="custom">-- Własne ID --</option>
-                <option value="list" style="background: var(--theme); color: white; font-weight: bold;">🔍 Pokaż listę serwerów (FiveM)</option>
             </select>
             <input type="text" id="customSrv" class="hidden-input" placeholder="Wpisz ID serwera (np. epk8gp)">
         </div>
@@ -206,14 +215,14 @@
     <div id="grid"></div>
 </div>
 
-<div id="serverModal" class="modal-overlay" onclick="closeModal(event)">
+<div id="serverModal" class="modal-overlay" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div class="modal-header">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="modalSearch" placeholder="Type the server name or code..." oninput="renderModalList()">
+                <input type="text" id="modalSearch" placeholder="Wpisz nazwę serwera lub kod..." oninput="renderModalList()">
             </div>
-            <button class="close-modal" onclick="closeModal(true)">✕</button>
+            <button class="close-modal" onclick="closeModal()">✕</button>
         </div>
         <div class="modal-body">
             <table class="server-table">
@@ -240,7 +249,6 @@
     let renderTimeout;
     let previousSelectValue = "96ky6e";
 
-    // --- ZMIENNE DO GLOBALNEJ BAZY FIVEM ---
     let allFivemServers = [];
     let isFetchingServers = false;
     let fetchError = false;
@@ -264,35 +272,26 @@
         const select = document.getElementById('serverSelect');
         const customSrv = document.getElementById('customSrv');
         
-        if (select.value === 'list') {
-            openModal();
-            return; 
-        }
-
         previousSelectValue = select.value; 
         customSrv.style.display = select.value === 'custom' ? 'block' : 'none';
         localStorage.setItem('grandrp_last_server', select.value);
         getData(true); 
     }
 
-    // --- SYSTEM MODALA Z BAZĄ FIVEM ---
+    // --- SYSTEM MODALA ---
     function openModal() {
         document.getElementById('serverModal').classList.add('active');
         document.body.style.overflow = 'hidden'; 
-        fetchOfficialFivemServers(); // Zaczyna pobierać w tle, jeśli jeszcze tego nie zrobił
+        fetchOfficialFivemServers(); 
     }
 
-    function closeModal(forceRevert = false) {
+    function closeModal() {
         document.getElementById('serverModal').classList.remove('active');
         document.body.style.overflow = 'auto';
-        
-        if (forceRevert === true || forceRevert.target === document.getElementById('serverModal')) {
-            document.getElementById('serverSelect').value = previousSelectValue;
-        }
     }
 
+    // Zmieniona funkcja na ominięcie blokad CORS (Not Working error)
     async function fetchOfficialFivemServers() {
-        // Zabezpieczenie, by pobierać dane tylko raz na sesję
         if (allFivemServers.length > 0 || isFetchingServers) {
             renderModalList(); 
             return;
@@ -302,18 +301,29 @@
         renderModalList(); 
 
         try {
-            // Bezpośrednie odpytanie głównego serwera z bazą serwerów (Działa dzięki CORS)
-            const response = await fetch('https://servers-frontend.fivem.net/api/servers/streamRedir/');
+            const targetUrl = 'https://servers-frontend.fivem.net/api/servers/streamRedir/';
+            
+            // Proxy omijające błędy CORS (najczęstszy powód "niedziałania")
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+            
+            let response;
+            try {
+                // Próbujemy najpierw przez proxy
+                response = await fetch(proxyUrl);
+            } catch(e) {
+                // Jeśli proxy zawiedzie, próbujemy pobrać bezpośrednio jako plan B
+                response = await fetch(targetUrl);
+            }
+
             if (!response.ok) throw new Error("Błąd sieci");
             
             const data = await response.json();
             
-            // Czyszczenie i parsowanie tysięcy serwerów
             allFivemServers = data.map(server => {
                 let sData = server.Data || {};
                 let rawName = sData.hostname || sData.sv_projectName || "Nieznany serwer";
-                // System usuwania ukrytych kolorów FiveM (^1, ^2, ^* itp.) i nadmiaru znaków
-                let cleanName = rawName.replace(/\^./g, '').trim(); 
+                // Czyszczenie ze znaków kodowania kolorów
+                let cleanName = rawName.replace(/\^[0-9]/g, '').trim(); 
                 
                 return {
                     name: cleanName,
@@ -323,10 +333,7 @@
                 };
             });
 
-            // Sortujemy absolutnie od największego serwera na świecie
             allFivemServers.sort((a, b) => b.clients - a.clients);
-
-            // Nadajemy ranking
             allFivemServers.forEach((s, index) => s.rank = index + 1);
 
         } catch (error) {
@@ -343,14 +350,14 @@
 
         if (isFetchingServers) {
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 60px; color: var(--theme);">
-                <strong style="font-size: 1.2rem;">Pobieranie oficjalnej bazy danych FiveM...</strong><br><br>
-                <span style="font-size: 0.85rem; color: #888;">Trwa skanowanie około 20 000 serwerów.<br>Może to zająć od kilku do kilkunastu sekund zależnie od Twojego internetu.</span>
+                <strong style="font-size: 1.2rem;">Ładowanie oficjalnej listy serwerów FiveM...</strong><br><br>
+                <span style="font-size: 0.85rem; color: #888;">Może to zająć kilka sekund (do pobrania jest ponad 20 000 serwerów).</span>
             </td></tr>`;
             return;
         }
 
         if (fetchError) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: #ff5555;">Błąd łączenia z głównym systemem FiveM. Spróbuj później.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: #ff5555;">Nie udało się połączyć z bazą FiveM. API może być przeciążone.</td></tr>`;
             return;
         }
 
@@ -364,7 +371,6 @@
             );
         }
 
-        // Limitujemy wyświetlanie w samej tabeli do 100, żeby nie "zawiesić" strony 20-tysiącami divów naraz
         const toShow = filtered.slice(0, 100);
 
         tbody.innerHTML = toShow.map(s => `
@@ -380,7 +386,7 @@
         `).join('');
 
         if(toShow.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color:#888;">Nie znaleziono serwera z taką nazwą lub kodem.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color:#888;">Nie znaleziono serwera.</td></tr>`;
         }
     }
 
@@ -409,7 +415,7 @@
         const title = document.getElementById('mainTitle');
         const grid = document.getElementById('grid');
         
-        if (!sID || sID === 'list') return;
+        if (!sID) return;
         
         if(select.value === '96ky6e') title.innerText = "GrandRP Finder";
         else if(select.value === 'z75e35') title.innerText = "BetterSide Finder";
@@ -436,7 +442,6 @@
         let tempClients = 0;
         let serverIp = null; 
 
-        // ETAP 1
         for (let source of sources) {
             try {
                 const res = await fetch(source);
@@ -453,7 +458,6 @@
             } catch (e) { }
         }
 
-        // ETAP 2: Omijanie ukrytej listy
         if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
             if(isManual) grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>API ukrywa graczy. Próba bezpośredniego pobrania (Direct IP)...</p>";
             
