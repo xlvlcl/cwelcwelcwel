@@ -253,6 +253,20 @@
     let isFetchingServers = false;
     let fetchError = false;
 
+    // --- BAZA AWARYJNA (FALLBACK) GDY GŁÓWNE API PADKIE ---
+    const topServersFallback = [
+        { rank: 1, name: "CoCoRP | WL:ON", code: "epk8gp", clients: "?", maxClients: "?" },
+        { rank: 2, name: "[PL] Project NXT | Whitelist OFF!", code: "zr41qp", clients: "?", maxClients: "?" },
+        { rank: 3, name: "Unwritten RP (18+) | JUST WIPED", code: "e3zdxm", clients: "?", maxClients: "?" },
+        { rank: 4, name: "^3Revolucija RolePlay ^0>>> ^3Sezona 4", code: "o4pxpj", clients: "?", maxClients: "?" },
+        { rank: 5, name: "Saga V4 Roleplay", code: "8prxj4", clients: "?", maxClients: "?" },
+        { rank: 6, name: "Rivia Fantasy Roleplay", code: "z615xy", clients: "?", maxClients: "?" },
+        { rank: 7, name: "Apollo", code: "kr19jv", clients: "?", maxClients: "?" },
+        { rank: 8, name: "TEMPO RP | +18", code: "r7q4qx", clients: "?", maxClients: "?" },
+        { rank: 9, name: "The Heights | #1 Whitelisted | 18+", code: "rxb9x7", clients: "?", maxClients: "?" },
+        { rank: 10, name: "DT-Creation", code: "ja9pg4", clients: "?", maxClients: "?" }
+    ];
+
     function hexToRgb(hex) {
         let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 85, 255';
@@ -290,7 +304,7 @@
         document.body.style.overflow = 'auto';
     }
 
-    // Zmieniona funkcja na ominięcie blokad CORS (Not Working error)
+    // --- POBIERANIE LISTY SERWERÓW Z KILKOMA ZABEZPIECZENIAMI ---
     async function fetchOfficialFivemServers() {
         if (allFivemServers.length > 0 || isFetchingServers) {
             renderModalList(); 
@@ -298,46 +312,59 @@
         }
         
         isFetchingServers = true;
+        fetchError = false;
         renderModalList(); 
 
-        try {
-            const targetUrl = 'https://servers-frontend.fivem.net/api/servers/streamRedir/';
-            
-            // Proxy omijające błędy CORS (najczęstszy powód "niedziałania")
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-            
-            let response;
+        const targetUrl = 'https://servers-frontend.fivem.net/api/servers/streamRedir/';
+        
+        // Zestaw 3 różnych proxy, żeby ominąć blokady i limity wielkości pliku
+        const proxySources = [
+            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+            `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+        ];
+
+        let success = false;
+        let data = null;
+
+        for (let proxy of proxySources) {
             try {
-                // Próbujemy najpierw przez proxy
-                response = await fetch(proxyUrl);
-            } catch(e) {
-                // Jeśli proxy zawiedzie, próbujemy pobrać bezpośrednio jako plan B
-                response = await fetch(targetUrl);
-            }
-
-            if (!response.ok) throw new Error("Błąd sieci");
-            
-            const data = await response.json();
-            
-            allFivemServers = data.map(server => {
-                let sData = server.Data || {};
-                let rawName = sData.hostname || sData.sv_projectName || "Nieznany serwer";
-                // Czyszczenie ze znaków kodowania kolorów
-                let cleanName = rawName.replace(/\^[0-9]/g, '').trim(); 
+                const response = await fetch(proxy);
+                if (!response.ok) continue;
                 
-                return {
-                    name: cleanName,
-                    code: server.EndPoint, 
-                    clients: sData.clients || 0,
-                    maxClients: sData.sv_maxclients || 32
-                };
-            });
+                data = await response.json();
+                if (data && Array.isArray(data)) {
+                    success = true;
+                    break;
+                }
+            } catch(e) {
+                // ciche ignorowanie - pętla przejdzie do kolejnego proxy
+            }
+        }
 
-            allFivemServers.sort((a, b) => b.clients - a.clients);
-            allFivemServers.forEach((s, index) => s.rank = index + 1);
+        if (success && data) {
+            try {
+                allFivemServers = data.map(server => {
+                    let sData = server.Data || {};
+                    let rawName = sData.hostname || sData.sv_projectName || "Nieznany serwer";
+                    // Usuwanie kodów kolorów (np. ^1, ^2, ^*)
+                    let cleanName = rawName.replace(/\^./g, '').trim(); 
+                    
+                    return {
+                        name: cleanName,
+                        code: server.EndPoint, 
+                        clients: sData.clients || 0,
+                        maxClients: sData.sv_maxclients || 32
+                    };
+                });
 
-        } catch (error) {
-            console.error('Błąd pobierania bazy danych FiveM:', error);
+                allFivemServers.sort((a, b) => b.clients - a.clients);
+                allFivemServers.forEach((s, index) => s.rank = index + 1);
+
+            } catch (error) {
+                fetchError = true;
+            }
+        } else {
             fetchError = true;
         }
 
@@ -351,21 +378,26 @@
         if (isFetchingServers) {
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 60px; color: var(--theme);">
                 <strong style="font-size: 1.2rem;">Ładowanie oficjalnej listy serwerów FiveM...</strong><br><br>
-                <span style="font-size: 0.85rem; color: #888;">Może to zająć kilka sekund (do pobrania jest ponad 20 000 serwerów).</span>
+                <span style="font-size: 0.85rem; color: #888;">Sprawdzam różne węzły proxy (omijanie blokad). Może to zająć kilka sekund...</span>
             </td></tr>`;
             return;
         }
 
-        if (fetchError) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color: #ff5555;">Nie udało się połączyć z bazą FiveM. API może być przeciążone.</td></tr>`;
-            return;
+        // --- FALLBACK SYSTEM ---
+        let displayServers = allFivemServers;
+        let isFallback = false;
+
+        // Jeśli wystąpił błąd albo API było przeciążone, używamy lokalnej listy
+        if (fetchError || allFivemServers.length === 0) {
+            displayServers = topServersFallback;
+            isFallback = true;
         }
 
         const searchQuery = document.getElementById('modalSearch').value.toLowerCase();
+        let filtered = displayServers;
         
-        let filtered = allFivemServers;
         if (searchQuery) {
-            filtered = allFivemServers.filter(s => 
+            filtered = displayServers.filter(s => 
                 s.name.toLowerCase().includes(searchQuery) || 
                 (s.code && s.code.toLowerCase().includes(searchQuery))
             );
@@ -373,21 +405,35 @@
 
         const toShow = filtered.slice(0, 100);
 
-        tbody.innerHTML = toShow.map(s => `
+        let html = '';
+        
+        // Komunikat informujący, że wyświetlamy kopię zapasową
+        if (isFallback) {
+            html += `<tr><td colspan="4" style="text-align:center; padding: 15px; background: rgba(255,50,50,0.1); border-bottom: 1px solid rgba(255,50,50,0.2); color: #ff8888; font-size: 0.85rem;">
+                ⚠️ Główne serwery FiveM odrzuciły żądanie z powodu przeciążenia. Zamiast tego wyświetlam awaryjną listę serwerów (Top 10).
+            </td></tr>`;
+        }
+
+        html += toShow.map(s => {
+            let playersText = s.clients !== "?" ? `${s.clients}/${s.maxClients} Online` : 'Zabezpieczone API';
+            return `
             <tr>
                 <td class="srv-rank">#${s.rank}</td>
                 <td class="srv-name">
                     ${s.name.substring(0, 65)}${s.name.length > 65 ? '...' : ''}
-                    <span class="srv-players">${s.clients}/${s.maxClients} Online</span>
+                    <span class="srv-players">${playersText}</span>
                 </td>
                 <td><span class="srv-code">${s.code}</span></td>
                 <td><button class="btn-select" onclick="selectServerFromList('${s.code}')">Wybierz</button></td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
 
         if(toShow.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 40px; color:#888;">Nie znaleziono serwera.</td></tr>`;
+            html += `<tr><td colspan="4" style="text-align:center; padding: 40px; color:#888;">Nie znaleziono serwera.</td></tr>`;
         }
+        
+        tbody.innerHTML = html;
     }
 
     function selectServerFromList(code) {
