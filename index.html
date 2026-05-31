@@ -185,40 +185,56 @@
         if (isManual) {
             players = [];
             totalClients = 0;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie danych bezpośrednio z API FiveM...</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie danych z FiveM...</p>";
         }
         
-        // Bezpośredni link do oficjalnego API FiveM (omijamy zablokowane serwery proxy)
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
-        try {
-            const res = await fetch(targetUrl, {
-                method: 'GET',
-                headers: { 'User-Agent': 'Mozilla/5.0' }
-            });
-            
-            if (!res.ok) throw new Error("Błąd odpowiedzi sieci");
-            
-            const data = await res.json();
-            
-            if (data && data.Data) {
-                players = data.Data.players || [];
-                totalClients = typeof data.Data.clients !== 'undefined' ? data.Data.clients : players.length;
-                
-                document.getElementById('fivem-dot').className = "dot online";
-                document.getElementById('fivem-text').innerText = "ONLINE";
-                render();
-            } else {
-                throw new Error("Błędna struktura danych");
+        // Zestaw metod połączenia - bezpośrednia oraz bezpieczne proxy rezerwowe
+        const fetchMethods = [
+            { url: targetUrl, isDirect: true },
+            { url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, isDirect: false },
+            { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, isWrapped: true }
+        ];
+
+        let success = false;
+        let data = null;
+
+        for (let method of fetchMethods) {
+            try {
+                const res = await fetch(method.url);
+                if (!res.ok) continue;
+
+                if (method.isWrapped) {
+                    const wrapper = await res.json();
+                    if (wrapper && wrapper.contents) data = JSON.parse(wrapper.contents);
+                } else {
+                    data = await res.json();
+                }
+
+                if (data && data.Data) {
+                    success = true;
+                    break;
+                }
+            } catch (e) {
+                // błąd wyciszany, skrypt idzie do kolejnej metody w tablicy
             }
-        } catch (e) {
-            // W razie braku włączonej wtyczki CORS lub błędu sieci, licznik bezpiecznie zeruje się
+        }
+        
+        if (success && data && data.Data) {
+            players = data.Data.players || [];
+            totalClients = typeof data.Data.clients !== 'undefined' ? data.Data.clients : players.length;
+            
+            document.getElementById('fivem-dot').className = "dot online";
+            document.getElementById('fivem-text').innerText = "ONLINE";
+            render();
+        } else {
             players = [];
             totalClients = 0;
             document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
             document.getElementById('fivem-dot').className = "dot";
-            document.getElementById('fivem-text').innerText = "BLOKADA CORS / OFFLINE";
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center; color:#ff4444;'>Upewnij się, że masz włączoną wtyczkę 'Allow CORS' w przeglądarce, aby pobrać dane.</p>";
+            document.getElementById('fivem-text').innerText = "OFFLINE";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Nie udało się pobrać danych (0 osób online).</p>";
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
