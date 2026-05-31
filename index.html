@@ -185,7 +185,6 @@
         else title.innerText = "Server Finder";
         
         refreshBtn.innerText = "...";
-        // Blokada spamu (cooldown) żeby proxy nie zablokowały Twojego IP
         if(isManual) refreshBtn.disabled = true;
 
         if (isManual) {
@@ -196,11 +195,12 @@
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
-        const sources = [
-            targetUrl,
-            `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
-            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+        // Elastyczna konfiguracja proxy - przetwarza poprawnie obiekty i czysty tekst
+        const proxyConfigs = [
+            { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, type: 'wrapped' },
+            { url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, type: 'raw' },
+            { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, type: 'raw' },
+            { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, type: 'raw' }
         ];
 
         let success = false;
@@ -208,15 +208,22 @@
         let tempClients = 0;
         let serverIp = null; 
 
-        // ETAP 1
-        for (let source of sources) {
+        // ETAP 1: Pobieranie z Master Listy przez proxy działające w pętli
+        for (let proxy of proxyConfigs) {
             try {
-                const res = await fetch(source);
+                const res = await fetch(proxy.url);
                 if (!res.ok) continue; 
                 
-                const text = await res.text();
-                // Sprawdzamy czy to naprawde JSON (czasem darmowe proxy zwracają błąd html)
-                const data = JSON.parse(text); 
+                let data = null;
+                if (proxy.type === 'wrapped') {
+                    const jsonWrapper = await res.json();
+                    if (jsonWrapper && jsonWrapper.contents) {
+                        data = JSON.parse(jsonWrapper.contents);
+                    }
+                } else {
+                    const text = await res.text();
+                    data = JSON.parse(text);
+                }
                 
                 if (data && data.Data) {
                     tempPlayers = data.Data.players || [];
@@ -227,31 +234,38 @@
                     }
                     
                     success = true;
-                    break;
+                    break; 
                 }
-            } catch (e) { 
-                // Ignorujemy bledy fetch (np. CORS, rate limits z proxy) i idziemy do kolejnego srodla
+            } catch (e) {
+                // Jeśli jedno proxy wywali błąd (np. Cloudflare HTML), pętla bezpiecznie przechodzi do następnego
             }
         }
 
-        // ETAP 2: Trick omijający puste listy
+        // ETAP 2: Rezerwowe pobieranie przez Direct IP (jeśli lista graczy jest pusta)
         if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
             if(isManual) grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>API ukrywa graczy. Próba bezpośredniego pobrania (Direct IP)...</p>";
             
             const directUrl = `http://${serverIp}/players.json`;
-            const proxySources = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`,
-                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(directUrl)}`,
-                `https://corsproxy.io/?${encodeURIComponent(directUrl)}`
+            const directProxies = [
+                { url: `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`, type: 'wrapped' },
+                { url: `https://corsproxy.io/?${encodeURIComponent(directUrl)}`, type: 'raw' },
+                { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(directUrl)}`, type: 'raw' }
             ];
 
-            for (let proxy of proxySources) {
+            for (let proxy of directProxies) {
                 try {
-                    const directRes = await fetch(proxy);
+                    const directRes = await fetch(proxy.url);
                     if (!directRes.ok) continue;
                     
-                    const text = await directRes.text();
-                    const directData = JSON.parse(text);
+                    let directData = null;
+                    if (proxy.type === 'wrapped') {
+                        const jsonWrapper = await directRes.json();
+                        if (jsonWrapper && jsonWrapper.contents) directData = JSON.parse(jsonWrapper.contents);
+                    } else {
+                        const text = await directRes.text();
+                        directData = JSON.parse(text);
+                    }
+
                     if (Array.isArray(directData) && directData.length > 0) {
                         tempPlayers = directData; 
                         break;
@@ -261,9 +275,8 @@
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
-        // Zwalnianie blokady przycisku po 5 sekundach
         if(isManual) {
-            setTimeout(() => { refreshBtn.disabled = false; }, 5000);
+            setTimeout(() => { refreshBtn.disabled = false; }, 4000); // cooldown 4s
         }
         
         if (success) {
@@ -276,7 +289,7 @@
             }
             render();
         } else if (isManual) {
-             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Serwer jest offline, wpisano błędne ID, albo uderzyłeś w limit proxy (spróbuj znów za minutę).</p>";
+             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Błąd połączenia. Wszystkie darmowe bramki proxy są przeciążone. Odczekaj chwilę i kliknij ODŚWIEŻ.</p>";
         }
     }
 
@@ -307,9 +320,9 @@
 
         if (players.length === 0) {
             if (totalClients > 0) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer całkowicie zablokował dostęp do listy graczy (nawet przez Direct IP).</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer ukrył listę graczy w API FiveM (licznik online powyżej działa prawidłowo).</p>";
             } else {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na serwerze (albo API zwróciło błąd).</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na serwerze.</p>";
             }
         } else {
             grid.innerHTML = filtered.map(p => {
