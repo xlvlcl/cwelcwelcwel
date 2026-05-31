@@ -14,6 +14,7 @@
             --text: #ffffff;
             --text-dim: #888;
             --gold: #ffcc00;
+            --danger: #ff4444;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,6 +49,7 @@
         .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
         .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
+        .dot.error { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
         .status-label { color: var(--theme); text-transform: uppercase; }
 
         .theme-panel {
@@ -74,6 +76,8 @@
         .btn-group button { padding: 12px 30px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); color: var(--theme); border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; height: 48px; }
         .btn-group button:hover:not(:disabled) { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
         .btn-group button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #555; color: #555; }
+
+        .debug-console { width: 100%; font-family: monospace; font-size: 0.8rem; color: #aaa; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center; margin-top: 10px; }
 
         .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 25px 0; width: 100%; }
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
@@ -107,7 +111,7 @@
 
 <div class="wrapper">
     <div class="system-status">
-        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">FiveM API:</span> <span id="fivem-text">POŁĄCZONO</span></div>
+        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">FiveM API:</span> <span id="fivem-text">OCZEKIWANIE</span></div>
     </div>
     
     <div class="theme-panel">
@@ -136,6 +140,8 @@
             <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
             <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
         </div>
+        
+        <div class="debug-console" id="debugLog">Status logów: Oczekiwanie na pierwsze zapytanie...</div>
     </div>
 
     <div class="stats-bar"><span id="counter">Online: <strong>0</strong></span></div>
@@ -149,6 +155,12 @@
     let showList = true;
     let favs = JSON.parse(localStorage.getItem('grandrp_favs')) || [];
     let renderTimeout;
+
+    function logDebug(msg, isError = false) {
+        const consoleEl = document.getElementById('debugLog');
+        consoleEl.innerText = `LOGS: ${msg}`;
+        consoleEl.style.color = isError ? 'var(--danger)' : '#aaa';
+    }
 
     function hexToRgb(hex) {
         let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -185,39 +197,54 @@
         if (isManual) {
             players = [];
             totalClients = 0;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie danych z FiveM...</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Łączenie z API...</p>";
         }
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
-        // Zestaw metod połączenia - bezpośrednia oraz bezpieczne proxy rezerwowe
         const fetchMethods = [
-            { url: targetUrl, isDirect: true },
-            { url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, isDirect: false },
-            { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, isWrapped: true }
+            { name: "Połączenie bezpośrednie", url: targetUrl, isDirect: true },
+            { name: "Brama rezerwowa 1 (corsproxy)", url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, isDirect: false },
+            { name: "Brama rezerwowa 2 (allorigins)", url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, isWrapped: true },
+            { name: "Brama rezerwowa 3 (codetabs)", url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, isDirect: false }
         ];
 
         let success = false;
         let data = null;
+        let lastErrorMsg = "Brak odpowiedzi z metod sieciowych.";
 
         for (let method of fetchMethods) {
             try {
+                logDebug(`Próba połączenia przez: ${method.name}...`);
                 const res = await fetch(method.url);
-                if (!res.ok) continue;
+                
+                if (!res.ok) {
+                    lastErrorMsg = `${method.name} zwrócił błąd HTTP ${res.status}`;
+                    continue;
+                }
 
                 if (method.isWrapped) {
                     const wrapper = await res.json();
-                    if (wrapper && wrapper.contents) data = JSON.parse(wrapper.contents);
+                    if (wrapper && wrapper.contents) {
+                        if(wrapper.contents.startsWith("<!DOCTYPE html>")) {
+                            lastErrorMsg = `${method.name} dostał blokadę Cloudflare HTML`;
+                            continue;
+                        }
+                        data = JSON.parse(wrapper.contents);
+                    }
                 } else {
                     data = await res.json();
                 }
 
                 if (data && data.Data) {
                     success = true;
+                    logDebug(`Sukces! Dane pobrane prawidłowo za pomocą: ${method.name}`);
                     break;
+                } else {
+                    lastErrorMsg = `Metoda ${method.name} zwróciła niekompletne dane strukturalne.`;
                 }
             } catch (e) {
-                // błąd wyciszany, skrypt idzie do kolejnej metody w tablicy
+                lastErrorMsg = `Błąd sieci/CORS w ${method.name}: ${e.message}`;
             }
         }
         
@@ -232,9 +259,10 @@
             players = [];
             totalClients = 0;
             document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
-            document.getElementById('fivem-dot').className = "dot";
-            document.getElementById('fivem-text').innerText = "OFFLINE";
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Nie udało się pobrać danych (0 osób online).</p>";
+            document.getElementById('fivem-dot').className = "dot error";
+            document.getElementById('fivem-text').innerText = "BLOKADA";
+            logDebug(`Wszystkie metody zawiodły. Ostatni błąd: ${lastErrorMsg}`, true);
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Serwer nie odpowiedział na zapytanie.</p>";
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
