@@ -174,31 +174,41 @@
     }
     document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
 
-    // SYSTEM ROTACYJNY PROXY Z POPRAWNYM PARSOWANIEM
-    async function fetchWithProxyRotation(targetUrl) {
-        const proxies = [
-            { url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, type: 'direct' },
-            { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, type: 'allorigins' },
-            { url: `https://thingproxy.freeboard.io/fetch/${targetUrl}`, type: 'direct' }
-        ];
-
-        for (let i = 0; i < proxies.length; i++) {
-            try {
-                console.log(`Próba pobrania przez Proxy ${i+1}/${proxies.length}...`);
-                const res = await fetch(proxies[i].url);
-                if (!res.ok) continue;
-
-                if (proxies[i].type === 'allorigins') {
-                    const wrapper = await res.json();
-                    if (!wrapper.contents) continue;
-                    return typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
-                } else {
-                    return await res.json();
-                }
-            } catch (e) {
-                console.warn(`Proxy ${i+1} zwróciło błąd, przełączam na kolejne...`, e);
+    // NOWE METODY OMIJANIA BLOKADY CLOUDFLARE
+    async function fetchServerData(serverId) {
+        // Metoda 1: Zaawansowane Proxy Cors-Anywhere
+        try {
+            const url = `https://cors-anywhere.herokuapp.com/https://servers-frontend.fivem.net/api/servers/single/${serverId}`;
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (res.ok) {
+                const json = await res.json();
+                if (json && json.Data) return json.Data;
             }
+        } catch(e) {
+            console.warn("Metoda 1 (Cors-Anywhere) zawiodła, próbuję Metody 2...");
         }
+
+        // Metoda 2: Alternatywne publiczne API zbierające dane z FiveM
+        try {
+            const url = `https://api.fivem.bany.lol/v1/server/${serverId}`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const json = await res.json();
+                // Mapowanie danych z alternatywnego API na strukturę skryptu
+                if (json) {
+                    return {
+                        players: json.players || [],
+                        clients: json.clients !== undefined ? json.clients : (json.vars?.clients ? parseInt(json.vars.clients) : 0),
+                        connectEndPoints: json.connectEndPoints || []
+                    };
+                }
+            }
+        } catch(e) {
+            console.error("Wszystkie metody pobierania danych zawiodły.", e);
+        }
+
         return null;
     }
 
@@ -230,53 +240,26 @@
             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Omijanie zabezpieczeń FiveM API...</p>";
         }
         
-        const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
-        const data = await fetchWithProxyRotation(targetUrl);
+        const serverData = await fetchServerData(sID);
 
-        let success = false;
-        let tempPlayers = [];
-        let tempClients = 0;
-        let serverIp = null; 
-
-        if (data && data.Data) {
-            tempPlayers = data.Data.players || [];
-            // Szukanie liczby osób w różnych strukturach API FiveM
-            tempClients = data.Data.clients !== undefined ? data.Data.clients : (data.Data.vars?.clients !== undefined ? parseInt(data.Data.vars.clients) : tempPlayers.length);
-            
-            if (data.Data.connectEndPoints && data.Data.connectEndPoints.length > 0) {
-                serverIp = data.Data.connectEndPoints[0];
-            }
-            success = true;
-        }
-
-        // Pobieranie bezpośrednie z IP, jeśli lista graczy w API jest pusta
-        if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
-            console.log("API nie zwróciło listy graczy. Próba pobrania bezpośrednio z IP serwera...");
-            const directUrl = `http://${serverIp}/players.json`;
-            const directData = await fetchWithProxyRotation(directUrl);
-            
-            if (Array.isArray(directData) && directData.length > 0) {
-                tempPlayers = directData;
-            }
-        }
-
-        refreshBtn.innerText = "ODŚWIEŻ";
-        
-        if (success) {
+        if (serverData) {
             statusDot.className = "dot online";
             statusText.innerText = "ONLINE";
-            players = tempPlayers;
-            totalClients = tempClients;
+            
+            players = serverData.players || [];
+            totalClients = serverData.clients !== undefined ? serverData.clients : players.length;
+            
             render();
         } else {
             statusDot.className = "dot error";
-            statusText.innerText = "BŁĄD POŁĄCZENIA";
-            errorBox.innerHTML = "<strong>Błąd systemu:</strong> FiveM całkowicie zablokowało zapytania z darmowych serwerów Proxy (Cloudflare 403) lub ID serwera jest nieprawidłowe. Spróbuj ponownie za chwilę.";
+            statusText.innerText = "BŁĄD";
+            errorBox.innerHTML = "<strong>Błąd systemu:</strong> API FiveM blokuje żądanie. <a href='https://cors-anywhere.herokuapp.com/corsdemo' target='_blank' style='color:var(--theme); font-weight:bold;'>KLIKNIJ TUTAJ</a>, naciśnij przycisk 'Request temporary access' i odśwież tę stronę.";
             errorBox.style.display = 'block';
             if (isManual) {
-                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--error);'>Brak odpowiedzi z API FiveM. Zabezpieczenia anty-botowe odrzuciły połączenie.</p>";
+                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--error);'>Brak odpowiedzi. Wymagana aktywacja proxy (instrukcja na górze ekranu).</p>";
             }
         }
+        refreshBtn.innerText = "ODŚWIEŻ";
     }
 
     function manualRefresh() { getData(true); }
@@ -306,7 +289,7 @@
 
         if (players.length === 0) {
             if (totalClients > 0) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer zablokował publiczny dostęp do listy nazwisk (players.json), ale pomyślnie pobrano ilość osób.</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer zablokował publiczny dostęp do listy graczy (players.json), ale pomyślnie odczytano liczbę osób online.</p>";
             } else {
                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy online lub serwer jest wyłączony.</p>";
             }
@@ -364,7 +347,6 @@
         getData(true); 
     }
 
-    // --- POPRAWNA INICJALIZACJA PO ZAŁADOWANIU STRONY ---
     window.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('grandrp_theme');
         if(savedTheme) setTheme(savedTheme);
@@ -383,7 +365,6 @@
         const savedCustom = localStorage.getItem('grandrp_custom_id');
         if(savedCustom) document.getElementById('customSrv').value = savedCustom;
 
-        // Uruchomienie z opóźnieniem chroniącym przed pustym DOM
         setTimeout(() => {
             getData(true);
         }, 300);
