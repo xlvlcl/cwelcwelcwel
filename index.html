@@ -77,7 +77,7 @@
         .btn-group button:hover:not(:disabled) { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
         .btn-group button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #555; color: #555; }
 
-        .debug-console { width: 100%; font-family: monospace; font-size: 0.8rem; color: #aaa; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center; margin-top: 10px; }
+        .debug-console { width: 100%; font-family: monospace; font-size: 0.8rem; color: #aaa; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center; margin-top: 10px; word-break: break-all; }
 
         .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 25px 0; width: 100%; }
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
@@ -141,7 +141,7 @@
             <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
         </div>
         
-        <div class="debug-console" id="debugLog">Status logów: Oczekiwanie na pierwsze zapytanie...</div>
+        <div class="debug-console" id="debugLog">Status logów: Oczekiwanie na zapytanie...</div>
     </div>
 
     <div class="stats-bar"><span id="counter">Online: <strong>0</strong></span></div>
@@ -197,54 +197,59 @@
         if (isManual) {
             players = [];
             totalClients = 0;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Łączenie z API...</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie najnowszych danych...</p>";
         }
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
         const fetchMethods = [
-            { name: "Połączenie bezpośrednie", url: targetUrl, isDirect: true },
-            { name: "Brama rezerwowa 1 (corsproxy)", url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, isDirect: false },
-            { name: "Brama rezerwowa 2 (allorigins)", url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, isWrapped: true },
-            { name: "Brama rezerwowa 3 (codetabs)", url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, isDirect: false }
+            { name: "Połączenie bezpośrednie", url: targetUrl },
+            { name: "Brama 1 (corsproxy.io)", url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}` },
+            { name: "Brama 2 (allorigins raw)", url: `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}` },
+            { name: "Brama 3 (codetabs)", url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}` }
         ];
 
         let success = false;
         let data = null;
-        let lastErrorMsg = "Brak odpowiedzi z metod sieciowych.";
+        let lastErrorMsg = "Brak stabilnej odpowiedzi z sieci.";
 
         for (let method of fetchMethods) {
             try {
-                logDebug(`Próba połączenia przez: ${method.name}...`);
+                logDebug(`Próba: ${method.name}...`);
                 const res = await fetch(method.url);
                 
                 if (!res.ok) {
-                    lastErrorMsg = `${method.name} zwrócił błąd HTTP ${res.status}`;
+                    lastErrorMsg = `${method.name} zgłosił błąd HTTP ${res.status}`;
                     continue;
                 }
 
-                if (method.isWrapped) {
-                    const wrapper = await res.json();
-                    if (wrapper && wrapper.contents) {
-                        if(wrapper.contents.startsWith("<!DOCTYPE html>")) {
-                            lastErrorMsg = `${method.name} dostał blokadę Cloudflare HTML`;
-                            continue;
-                        }
-                        data = JSON.parse(wrapper.contents);
-                    }
-                } else {
-                    data = await res.json();
+                const text = await res.text();
+                if (!text || text.trim().length === 0) {
+                    lastErrorMsg = `${method.name} zwrócił pustą zawartość`;
+                    continue;
+                }
+
+                if (text.trim().startsWith("<!DOCTYPE html>")) {
+                    lastErrorMsg = `${method.name} natrafił na filtr Cloudflare`;
+                    continue;
+                }
+
+                try {
+                    data = JSON.parse(text);
+                } catch(e) {
+                    lastErrorMsg = `${method.name} wysłał niepoprawny format danych`;
+                    continue;
                 }
 
                 if (data && data.Data) {
                     success = true;
-                    logDebug(`Sukces! Dane pobrane prawidłowo za pomocą: ${method.name}`);
+                    logDebug(`Sukces! Połączono przez: ${method.name}`);
                     break;
                 } else {
-                    lastErrorMsg = `Metoda ${method.name} zwróciła niekompletne dane strukturalne.`;
+                    lastErrorMsg = `${method.name} nie zawierał struktury 'Data'`;
                 }
             } catch (e) {
-                lastErrorMsg = `Błąd sieci/CORS w ${method.name}: ${e.message}`;
+                lastErrorMsg = `Błąd sieci w ${method.name}: ${e.message}`;
             }
         }
         
@@ -261,8 +266,8 @@
             document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
             document.getElementById('fivem-dot').className = "dot error";
             document.getElementById('fivem-text').innerText = "BLOKADA";
-            logDebug(`Wszystkie metody zawiodły. Ostatni błąd: ${lastErrorMsg}`, true);
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Serwer nie odpowiedział na zapytanie.</p>";
+            logDebug(`Błąd połączenia. Powód: ${lastErrorMsg}`, true);
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Serwer nie przesłał danych graczy. Spróbuj odświeżyć za chwilę.</p>";
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
@@ -298,9 +303,9 @@
 
         if (players.length === 0) {
             if (totalClients > 0) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer ukrył listę graczy w API FiveM (licznik online powyżej działa prawidłowo).</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak kafelek szczegółowych:</strong> Serwer ukrył pełną listę nazwisk w API FiveM ze względów bezpieczeństwa. Główny licznik osób na górze działa prawidłowo.</p>";
             } else {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na serwerze.</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak osób online.</p>";
             }
         } else {
             grid.innerHTML = filtered.map(p => {
