@@ -188,15 +188,14 @@
         if (isManual) {
             players = [];
             totalClients = 0;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Łączenie z serwerem i pobieranie danych...</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Łączenie z serwerem...</p>";
         }
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
-        // Nowe, stabilne punkty dostępowe omijające ograniczenia Cloudflare
+        // PODMIENIONY ADRES NA TWÓJ CLOUDFLARE WORKER:
         const sources = [
-            `https://cors-anywhere.mirror.workers.dev/?url=${encodeURIComponent(targetUrl)}`,
-            `https://images.weserv.nl/?url=${encodeURIComponent(targetUrl)}&output=json`
+            `https://old-tooth-0006.vakadospl.workers.dev/?url=${encodeURIComponent(targetUrl)}`
         ];
 
         let success = false;
@@ -204,7 +203,6 @@
         let tempClients = 0;
         let serverIp = null; 
 
-        // ETAP 1
         for (let source of sources) {
             try {
                 const res = await fetch(source);
@@ -225,13 +223,10 @@
             } catch (e) { }
         }
 
-        // ETAP 2: Pobieranie bezpośrednie jeśli lista ukryta
         if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
-            if(isManual) grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>API ukrywa graczy. Próba bezpośredniego pobrania (Direct IP)...</p>";
-            
             const directUrl = `http://${serverIp}/players.json`;
             const proxySources = [
-                `https://cors-anywhere.mirror.workers.dev/?url=${encodeURIComponent(directUrl)}`
+                `https://old-tooth-0006.vakadospl.workers.dev/?url=${encodeURIComponent(directUrl)}`
             ];
 
             for (let proxy of proxySources) {
@@ -260,7 +255,7 @@
             }
             render();
         } else if (isManual) {
-             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Błąd pobierania danych z FiveM. Spróbuj ponownie za chwilę.</p>";
+             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Błąd pobierania danych.</p>";
         }
     }
 
@@ -291,9 +286,9 @@
 
         if (players.length === 0) {
             if (totalClients > 0) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer całkowicie zablokował dostęp do listy graczy.</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer zablokował dostęp do listy.</p>";
             } else {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na serwerze.</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy.</p>";
             }
         } else {
             grid.innerHTML = filtered.map(p => {
