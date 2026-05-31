@@ -195,41 +195,54 @@
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
-        // Dodano połączenie bezpośrednie (typ 'raw' na pierwszym miejscu), 
-        // ponieważ API FiveM aktualnie akceptuje zapytania CORS.
         const proxyConfigs = [
             { url: targetUrl, type: 'raw' }, 
             { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, type: 'wrapped' },
             { url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, type: 'raw' },
-            { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, type: 'raw' },
-            { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, type: 'raw' }
+            { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, type: 'raw' }
         ];
 
         let success = false;
+        let is404 = false; // Flaga wykrycia nieaktywnego ID
         let tempPlayers = [];
         let tempClients = 0;
         let serverIp = null; 
 
-        // ETAP 1: Pobieranie z Master Listy
         for (let proxy of proxyConfigs) {
             try {
                 const res = await fetch(proxy.url);
+                
+                // Sprawdzamy status bezpośredni (np. z corsproxy lub direct fetch)
+                if (res.status === 404) {
+                    is404 = true;
+                    continue;
+                }
                 if (!res.ok) continue; 
                 
                 let data = null;
                 if (proxy.type === 'wrapped') {
                     const jsonWrapper = await res.json();
+                    if (jsonWrapper && jsonWrapper.status && jsonWrapper.status.http_code === 404) {
+                        is404 = true;
+                        continue;
+                    }
                     if (jsonWrapper && jsonWrapper.contents) {
                         data = JSON.parse(jsonWrapper.contents);
                     }
                 } else {
                     const text = await res.text();
+                    if (text.includes("Cloudflare") || text.includes("<!DOCTYPE html>")) continue; // zablokowane proxy
                     data = JSON.parse(text);
+                }
+                
+                // Sprawdzamy, czy struktura JSON nie zawiera informacji o błędzie 404 ze strony FiveM
+                if (data && (data.error || data.Message === "Not Found")) {
+                    is404 = true;
+                    continue;
                 }
                 
                 if (data && data.Data) {
                     tempPlayers = data.Data.players || [];
-                    // Poprawka: używamy sztywnego sprawdzenia, aby 0 nie potraktowało jako "false" i nie nadpisało długością pustej listy graczy
                     tempClients = typeof data.Data.clients !== 'undefined' ? data.Data.clients : tempPlayers.length;
                     
                     if (data.Data.connectEndPoints && data.Data.connectEndPoints.length > 0) {
@@ -240,26 +253,22 @@
                     break; 
                 }
             } catch (e) {
-                // Zabezpieczenie przed przerwaniem pętli
+                // błąd parsowania / sieciowy, leci do następnego proxy
             }
         }
 
-        // ETAP 2: Rezerwowe pobieranie przez Direct IP (jeśli lista graczy jest pusta)
+        // Rezerwowe Direct IP (tylko jak serwer znaleziono, ale schował listę)
         if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
-            if(isManual) grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>API ukrywa graczy. Próba bezpośredniego pobrania (Direct IP)...</p>";
-            
             const directUrl = `http://${serverIp}/players.json`;
             const directProxies = [
-                { url: `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`, type: 'wrapped' },
                 { url: `https://corsproxy.io/?${encodeURIComponent(directUrl)}`, type: 'raw' },
-                { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(directUrl)}`, type: 'raw' }
+                { url: `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`, type: 'wrapped' }
             ];
 
             for (let proxy of directProxies) {
                 try {
                     const directRes = await fetch(proxy.url);
                     if (!directRes.ok) continue;
-                    
                     let directData = null;
                     if (proxy.type === 'wrapped') {
                         const jsonWrapper = await directRes.json();
@@ -268,7 +277,6 @@
                         const text = await directRes.text();
                         directData = JSON.parse(text);
                     }
-
                     if (Array.isArray(directData) && directData.length > 0) {
                         tempPlayers = directData; 
                         break;
@@ -291,10 +299,23 @@
                 if (tempClients > 0) totalClients = tempClients;
             }
             render();
-        } else if (isManual) {
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Błąd połączenia. Próba pobrania danych z API FiveM nie powiodła się. Odczekaj chwilę i kliknij ODŚWIEŻ.</p>";
-            // Resetujemy licznik również na widoku w przypadku błędu
+        } else {
+            players = [];
+            totalClients = 0;
             document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
+            
+            if (is404) {
+                grid.innerHTML = `
+                <div style='grid-column:1/-1; text-align:center; padding: 30px; background: rgba(255, 204, 0, 0.05); border: 1px dashed var(--gold); border-radius: 8px;'>
+                    <p style='color: var(--gold); font-weight: bold; font-size: 1.2rem; margin-bottom: 8px;'>⚠️ BŁĄD 404: Kod ID serwera jest NIEAKTYWNY!</p>
+                    <p style='opacity: 0.7; font-size: 0.9rem; max-width: 600px; margin: 0 auto;'>
+                        Serwer prawdopodobnie przeszedł restart i zmienił swój 6-znakowy identyfikator na nowy. 
+                        Wybierz z listy opcję <strong>-- Własne ID --</strong> i wpisz aktualny kod serwera pobrany z aplikacji FiveM.
+                    </p>
+                </div>`;
+            } else if (isManual) {
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Błąd połączenia z API. Spróbuj odświeżyć za chwilę.</p>";
+            }
         }
     }
 
@@ -319,7 +340,6 @@
             return a.id - b.id;            
         });
 
-        // Dynamiczny format wyświetlania online
         counter.innerHTML = `Online: <strong>${(sidVal || nickVal) ? filtered.length : totalClients}</strong>`;
 
         if (!showList) { grid.innerHTML = ""; return; }
