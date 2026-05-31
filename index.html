@@ -1,3 +1,158 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Finder | by kejcpi</title>
+    <style>
+        :root {
+            --bg: #050505;              
+            --panel: rgba(15, 15, 15, 0.85);          
+            --theme: #0055FF;
+            --theme-rgb: 0, 85, 255; 
+            --theme-glow: rgba(0, 85, 255, 0.4);
+            --text: #ffffff;
+            --text-dim: #888;
+            --gold: #ffcc00;
+            --error: #ff4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- TŁO --- */
+        .background-fx {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+            background: radial-gradient(at 0% 0%, var(--theme-glow) 0px, transparent 60%),
+                        radial-gradient(at 100% 100%, var(--theme-glow) 0px, transparent 60%),
+                        radial-gradient(at 50% 50%, rgba(0,0,0,1) 0px, transparent 100%);
+            background-attachment: fixed;
+        }
+
+        .wrapper { width: 100%; max-width: 1300px; position: relative; padding-bottom: 50px; }
+
+        /* --- STATUS --- */
+        .system-status {
+            position: absolute; top: 0; left: 0; display: flex; flex-direction: column; gap: 8px;
+            padding: 10px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            border: 1px solid var(--theme); box-shadow: 0 0 10px var(--theme-glow); border-radius: 8px; z-index: 200;
+        }
+        .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
+        .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
+        .dot.error { background: var(--error); box-shadow: 0 0 8px var(--error); }
+        .status-label { color: var(--theme); text-transform: uppercase; }
+
+        /* THEME PANEL */
+        .theme-panel {
+            position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 10px;
+            padding: 8px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            border: 1px solid var(--theme); border-radius: 8px; box-shadow: 0 0 15px var(--theme-glow); z-index: 200;
+        }
+        .color-preview { width: 25px; height: 25px; border-radius: 50%; border: 2px solid #fff; background-color: var(--theme); position: relative; cursor: pointer; transition: 0.3s; }
+        .color-preview:hover { transform: scale(1.1); }
+        #themePicker { position: absolute; top: -10px; left: -10px; width: 50px; height: 50px; opacity: 0; cursor: pointer; }
+
+        header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
+        h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; transition: 0.5s; }
+
+        /* CONTROLS */
+        .controls { 
+            background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(15px); padding: 25px; 
+            border-radius: 12px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; 
+        }
+        .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 180px; }
+        label { font-size: 0.7rem; color: var(--theme); font-weight: bold; text-transform: uppercase; margin-left: 5px; }
+        input, select { background: rgba(0,0,0,0.4); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 14px; border-radius: 8px; outline: none; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); background: rgba(0,0,0,0.6); }
+        
+        .btn-group button { padding: 12px 30px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); color: var(--theme); border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; height: 48px; }
+        .btn-group button:hover { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
+
+        .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 25px 0; width: 100%; flex-direction: column; }
+        #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+        #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
+        .error-msg { color: var(--error); font-size: 0.9rem; margin-top: 10px; display: none; text-align: center; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--error); max-width: 600px; }
+
+        /* --- KAFELKI --- */
+        #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
+        .card { 
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-left: 4px solid var(--theme); padding: 12px 18px; border-radius: 8px; display: flex; align-items: center; 
+            gap: 15px; position: relative; overflow: hidden; transition: all 0.3s; transform: translateZ(0); 
+        }
+        .card::before { content: ''; position: absolute; top: 0; left: -150%; width: 100%; height: 100%; background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.3), transparent); transition: all 0.6s ease-in-out; z-index: 1; pointer-events: none; }
+        .card:hover { background: rgba(var(--theme-rgb), 0.15); border-color: var(--theme); transform: translateY(-7px) scale(1.02); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5), 0 0 25px var(--theme-glow); }
+        .card:hover::before { left: 150%; }
+        .card > * { z-index: 2; position: relative; }
+        .ping-badge { font-size: 0.75rem; font-family: monospace; font-weight: bold; color: var(--theme); transition: 0.3s; flex-shrink: 0; }
+        .id-box { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--theme); font-weight: bold; padding: 4px 10px; border-radius: 6px; font-family: monospace; transition: 0.3s; flex-shrink: 0; }
+        .nick-txt { flex: 1; font-weight: 600; font-size: 1.05rem; transition: 0.3s; padding-right: 28px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .card:hover .ping-badge, .card:hover .nick-txt { color: #fff; text-shadow: 0 0 5px var(--theme-glow); }
+        .card:hover .id-box { background: var(--theme); color: #000; border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
+
+        .fav-btn { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: transparent !important; border: none !important; color: rgba(255,255,255,0.2) !important; font-size: 1.2rem; cursor: pointer; transition: 0.3s; padding: 0; outline: none; z-index: 5; }
+        .fav-btn:hover { color: var(--gold) !important; transform: translateY(-50%) scale(1.3) rotate(15deg) !important; }
+        .fav-btn.active { color: var(--gold) !important; filter: drop-shadow(0 0 5px rgba(255, 204, 0, 0.8)); }
+        .hidden-input { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="background-fx"></div>
+
+<div class="wrapper">
+    <div class="system-status">
+        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">API Status:</span> <span id="fivem-text">POBIERANIE</span></div>
+    </div>
+    
+    <div class="theme-panel">
+        <span class="theme-label" style="font-size: 0.7rem; font-weight: bold; color: var(--theme);">MOTYW:</span>
+        <div class="color-preview"><input type="color" id="themePicker" value="#0055FF"></div>
+    </div>
+
+    <header>
+        <h1 id="mainTitle">GrandRP Finder</h1>
+    </header>
+
+    <div class="controls">
+        <div class="input-group">
+            <label>Serwer</label>
+            <select id="serverSelect" onchange="checkCustomServer()">
+                <option value="96ky6e" selected>GrandRP (PL)</option>
+                <option value="z75e35">BetterSide</option>
+                <option value="ler8myo">OsloRP</option>
+                <option value="custom">-- Własne ID --</option>
+            </select>
+            <input type="text" id="customSrv" class="hidden-input" placeholder="Wpisz ID serwera (np. epk8gp)">
+        </div>
+        <div class="input-group"><label>Szukaj ID</label><input type="number" id="sid" placeholder="np. 123" oninput="renderDebounced()"></div>
+        <div class="input-group"><label>Szukaj Nicku</label><input type="text" id="snick" placeholder="np. imie" oninput="renderDebounced()"></div>
+        <div class="btn-group" style="padding-top: 19px; display: flex; gap: 10px;">
+            <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
+            <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <span id="counter">Online: <strong>0</strong></span>
+        <div id="errorBox" class="error-msg"></div>
+    </div>
+    
+    <div id="grid"></div>
+</div>
+
 <script>
     let players = [];
     let totalClients = 0;
@@ -19,7 +174,7 @@
     }
     document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
 
-    // POPRAWIONA FUNKCJA PROXY - Lepiej radzi sobie z formatowaniem tekst/obiekt
+    // SYSTEM ROTACYJNY PROXY Z POPRAWNYM PARSOWANIEM
     async function fetchWithProxyRotation(targetUrl) {
         const proxies = [
             { url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, type: 'direct' },
@@ -36,7 +191,6 @@
                 if (proxies[i].type === 'allorigins') {
                     const wrapper = await res.json();
                     if (!wrapper.contents) continue;
-                    // Bezpieczne parsowanie stringa na obiekt
                     return typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
                 } else {
                     return await res.json();
@@ -73,7 +227,7 @@
         if (isManual) {
             players = [];
             totalClients = 0;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie danych z FiveM API...</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Omijanie zabezpieczeń FiveM API...</p>";
         }
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
@@ -86,7 +240,7 @@
 
         if (data && data.Data) {
             tempPlayers = data.Data.players || [];
-            // Poprawka czytania ilości osób z różnych struktur API FiveM
+            // Szukanie liczby osób w różnych strukturach API FiveM
             tempClients = data.Data.clients !== undefined ? data.Data.clients : (data.Data.vars?.clients !== undefined ? parseInt(data.Data.vars.clients) : tempPlayers.length);
             
             if (data.Data.connectEndPoints && data.Data.connectEndPoints.length > 0) {
@@ -95,7 +249,7 @@
             success = true;
         }
 
-        // Jeśli API nie dało listy graczy, szukamy bezpośrednio przez IP
+        // Pobieranie bezpośrednie z IP, jeśli lista graczy w API jest pusta
         if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
             console.log("API nie zwróciło listy graczy. Próba pobrania bezpośrednio z IP serwera...");
             const directUrl = `http://${serverIp}/players.json`;
@@ -111,18 +265,16 @@
         if (success) {
             statusDot.className = "dot online";
             statusText.innerText = "ONLINE";
-            
             players = tempPlayers;
             totalClients = tempClients;
-            
             render();
         } else {
             statusDot.className = "dot error";
             statusText.innerText = "BŁĄD POŁĄCZENIA";
-            errorBox.innerHTML = "<strong>Błąd systemu:</strong> Darmowe serwery Proxy zostały zablokowane przez Cloudflare (FiveM) lub ID serwera wygasło. Kliknij ODŚWIEŻ za chwilę.";
+            errorBox.innerHTML = "<strong>Błąd systemu:</strong> FiveM całkowicie zablokowało zapytania z darmowych serwerów Proxy (Cloudflare 403) lub ID serwera jest nieprawidłowe. Spróbuj ponownie za chwilę.";
             errorBox.style.display = 'block';
             if (isManual) {
-                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--error);'>Brak odpowiedzi z API FiveM. Zabezpieczenia odrzuciły połączenie proxy.</p>";
+                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--error);'>Brak odpowiedzi z API FiveM. Zabezpieczenia anty-botowe odrzuciły połączenie.</p>";
             }
         }
     }
@@ -154,7 +306,7 @@
 
         if (players.length === 0) {
             if (totalClients > 0) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer ukrywa listę nazwisk graczy w API (zabezpieczenie serwerowe), ale pomyślnie odczytano ogólną liczbę osób online.</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer zablokował publiczny dostęp do listy nazwisk (players.json), ale pomyślnie pobrano ilość osób.</p>";
             } else {
                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy online lub serwer jest wyłączony.</p>";
             }
@@ -212,7 +364,7 @@
         getData(true); 
     }
 
-    // --- INICJALIZACJA STARTOWA ---
+    // --- POPRAWNA INICJALIZACJA PO ZAŁADOWANIU STRONY ---
     window.addEventListener('DOMContentLoaded', () => {
         const savedTheme = localStorage.getItem('grandrp_theme');
         if(savedTheme) setTheme(savedTheme);
@@ -228,15 +380,16 @@
         document.getElementById('customSrv').addEventListener('input', (e) => {
             localStorage.setItem('grandrp_custom_id', e.target.value);
         });
-        
         const savedCustom = localStorage.getItem('grandrp_custom_id');
         if(savedCustom) document.getElementById('customSrv').value = savedCustom;
 
-        // Bezpieczne wywołanie po pełnym załadowaniu DOM
+        // Uruchomienie z opóźnieniem chroniącym przed pustym DOM
         setTimeout(() => {
             getData(true);
-        }, 500);
+        }, 300);
 
         setInterval(() => getData(false), 60000); 
     });
 </script>
+</body>
+</html>
