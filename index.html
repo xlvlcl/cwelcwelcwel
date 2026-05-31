@@ -31,7 +31,6 @@
             overflow-x: hidden;
         }
 
-        /* --- TŁO --- */
         .background-fx {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
             background: radial-gradient(at 0% 0%, var(--theme-glow) 0px, transparent 60%),
@@ -42,7 +41,6 @@
 
         .wrapper { width: 100%; max-width: 1300px; position: relative; padding-bottom: 50px; }
 
-        /* --- STATUS --- */
         .system-status {
             position: absolute; top: 0; left: 0; display: flex; flex-direction: column; gap: 8px;
             padding: 10px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
@@ -50,11 +48,10 @@
         }
         .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
-        .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
+        .dot.online { background: #00ff66; box-shadow: 0 0 8px #00ff66; }
         .dot.error { background: var(--error); box-shadow: 0 0 8px var(--error); }
         .status-label { color: var(--theme); text-transform: uppercase; }
 
-        /* THEME PANEL */
         .theme-panel {
             position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 10px;
             padding: 8px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
@@ -67,7 +64,6 @@
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
         h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; transition: 0.5s; }
 
-        /* CONTROLS */
         .controls { 
             background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(15px); padding: 25px; 
             border-radius: 12px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; 
@@ -83,9 +79,8 @@
         .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 25px 0; width: 100%; flex-direction: column; }
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
-        .error-msg { color: var(--error); font-size: 0.9rem; margin-top: 10px; display: none; text-align: center; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--error); max-width: 600px; }
+        .error-msg { color: var(--text); font-size: 0.9rem; margin-top: 10px; display: none; text-align: left; background: rgba(20, 20, 20, 0.9); padding: 20px; border-radius: 8px; border: 1px solid var(--theme); max-width: 700px; box-shadow: 0 0 20px rgba(0,0,0,0.8); line-height: 1.5; }
 
-        /* --- KAFELKI --- */
         #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         .card { 
             background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -114,7 +109,7 @@
 
 <div class="wrapper">
     <div class="system-status">
-        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">API Status:</span> <span id="fivem-text">POBIERANIE</span></div>
+        <div class="status-item"><div id="fivem-dot" class="dot error"></div><span class="status-label">Połączenie:</span> <span id="fivem-text">SPRAWDZANIE</span></div>
     </div>
     
     <div class="theme-panel">
@@ -154,6 +149,12 @@
 </div>
 
 <script>
+    // =========================================================================
+    // TUTAJ WKLEJ LINK DO SWOJEGO WORKERA (ZGODNIE Z INSTRUKCJĄ "SPOSÓB 2"):
+    // Przykład: const MY_PRIVATE_PROXY = "https://twoja-nazwa.workers.dev/?url=";
+    // =========================================================================
+    const MY_PRIVATE_PROXY = ""; 
+
     let players = [];
     let totalClients = 0;
     let showList = true;
@@ -174,39 +175,48 @@
     }
     document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
 
-    // NOWE METODY OMIJANIA BLOKADY CLOUDFLARE
+    // INTELIGENTNY SYSTEM POBIERANIA DANYCH
     async function fetchServerData(serverId) {
-        // Metoda 1: Zaawansowane Proxy Cors-Anywhere
+        const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${serverId}`;
+
+        // KROK 1: Próba bezpośrednia (Działa, jeśli użytkownik ma wtyczkę CORS w przeglądarce)
         try {
-            const url = `https://cors-anywhere.herokuapp.com/https://servers-frontend.fivem.net/api/servers/single/${serverId}`;
-            const res = await fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
+            const res = await fetch(targetUrl);
             if (res.ok) {
                 const json = await res.json();
                 if (json && json.Data) return json.Data;
             }
         } catch(e) {
-            console.warn("Metoda 1 (Cors-Anywhere) zawiodła, próbuję Metody 2...");
+            console.log("Tryb bezpośredni zablokowany przez CORS. Próba ominięcia...");
         }
 
-        // Metoda 2: Alternatywne publiczne API zbierające dane z FiveM
-        try {
-            const url = `https://api.fivem.bany.lol/v1/server/${serverId}`;
-            const res = await fetch(url);
-            if (res.ok) {
-                const json = await res.json();
-                // Mapowanie danych z alternatywnego API na strukturę skryptu
-                if (json) {
-                    return {
-                        players: json.players || [],
-                        clients: json.clients !== undefined ? json.clients : (json.vars?.clients ? parseInt(json.vars.clients) : 0),
-                        connectEndPoints: json.connectEndPoints || []
-                    };
+        // KROK 2: Próba przez prywatny Cloudflare Worker (Jeśli podany wyżej)
+        if (MY_PRIVATE_PROXY) {
+            try {
+                const res = await fetch(`${MY_PRIVATE_PROXY}${encodeURIComponent(targetUrl)}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json && json.Data) return json.Data;
                 }
+            } catch(e) {
+                console.error("Prywatne proxy Cloudflare zgłosiło błąd:", e);
             }
-        } catch(e) {
-            console.error("Wszystkie metody pobierania danych zawiodły.", e);
+        }
+
+        // KROK 3: Ostatnia szansa - publiczne proxy (w 99% blokowane przez Cloudflare na serwerach FiveM)
+        const fallbacks = [
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`,
+            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`
+        ];
+
+        for (let url of fallbacks) {
+            try {
+                const res = await fetch(url);
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json && json.Data) return json.Data;
+                }
+            } catch(e) {}
         }
 
         return null;
@@ -237,14 +247,14 @@
         if (isManual) {
             players = [];
             totalClients = 0;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Omijanie zabezpieczeń FiveM API...</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie statusu serwera...</p>";
         }
         
         const serverData = await fetchServerData(sID);
 
         if (serverData) {
             statusDot.className = "dot online";
-            statusText.innerText = "ONLINE";
+            statusText.innerText = "POŁĄCZONO";
             
             players = serverData.players || [];
             totalClients = serverData.clients !== undefined ? serverData.clients : players.length;
@@ -252,11 +262,16 @@
             render();
         } else {
             statusDot.className = "dot error";
-            statusText.innerText = "BŁĄD";
-            errorBox.innerHTML = "<strong>Błąd systemu:</strong> API FiveM blokuje żądanie. <a href='https://cors-anywhere.herokuapp.com/corsdemo' target='_blank' style='color:var(--theme); font-weight:bold;'>KLIKNIJ TUTAJ</a>, naciśnij przycisk 'Request temporary access' i odśwież tę stronę.";
+            statusText.innerText = "BLOKADA API";
+            errorBox.innerHTML = `
+                <strong style="color:var(--error); font-size:1.1rem;">Dlaczego wyświetla się 0 osób?</strong><br><br>
+                Zabezpieczenia anty-botowe FiveM całkowicie odrzuciły to zapytanie. Aby strona zaczęła działać, wybierz jedno z dwóch rozwiązań:<br><br>
+                1. <strong>Najszybsze:</strong> Zainstaluj w przeglądarce wtyczkę <u>"Allow CORS: Access-Control-Allow-Origin"</u>, włącz ją i odśwież stronę.<br>
+                2. <strong>Permanentne:</strong> Stwórz darmowy skrypt Cloudflare Worker (zgodnie z instrukcją), a jego adres wklej wewnątrz pliku HTML w linii 142 (zmienna <code>MY_PRIVATE_PROXY</code>).
+            `;
             errorBox.style.display = 'block';
             if (isManual) {
-                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--error);'>Brak odpowiedzi. Wymagana aktywacja proxy (instrukcja na górze ekranu).</p>";
+                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--error);'>Błąd autoryzacji CORS / Blokada Cloudflare w FiveM.</p>";
             }
         }
         refreshBtn.innerText = "ODŚWIEŻ";
@@ -289,7 +304,7 @@
 
         if (players.length === 0) {
             if (totalClients > 0) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer zablokował publiczny dostęp do listy graczy (players.json), ale pomyślnie odczytano liczbę osób online.</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Pomyślnie pobrano dane!</strong> Serwer ukrywa publiczną listę nazwisk (players.json), ale wykryto <strong>" + totalClients + "</strong> osób online.</p>";
             } else {
                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy online lub serwer jest wyłączony.</p>";
             }
@@ -365,10 +380,7 @@
         const savedCustom = localStorage.getItem('grandrp_custom_id');
         if(savedCustom) document.getElementById('customSrv').value = savedCustom;
 
-        setTimeout(() => {
-            getData(true);
-        }, 300);
-
+        setTimeout(() => { getData(true); }, 300);
         setInterval(() => getData(false), 60000); 
     });
 </script>
