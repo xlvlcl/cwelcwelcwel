@@ -47,7 +47,7 @@
             border: 1px solid var(--theme); box-shadow: 0 0 10px var(--theme-glow); border-radius: 8px; z-index: 200;
         }
         .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #ffaa00; box-shadow: 0 0 8px #ffaa00; transition: 0.3s; }
         .dot.online { background: #00ff66; box-shadow: 0 0 8px #00ff66; }
         .dot.error { background: var(--error); box-shadow: 0 0 8px var(--error); }
         .status-label { color: var(--theme); text-transform: uppercase; }
@@ -108,7 +108,7 @@
 
 <div class="wrapper">
     <div class="system-status">
-        <div class="status-item"><div id="fivem-dot" class="dot error"></div><span class="status-label">Połączenie:</span> <span id="fivem-text">SPRAWDZANIE</span></div>
+        <div class="status-item"><div id="fivem-dot" class="dot"></div><span class="status-label">Połączenie:</span> <span id="fivem-text">ŁĄCZENIE...</span></div>
     </div>
     
     <div class="theme-panel">
@@ -147,10 +147,7 @@
 </div>
 
 <script>
-    // =========================================================================
-    // TUTAJ WSTAW SWÓJ LINK Z CLOUDFLARE WORKERS!
-    // Przykład: const MY_PROXY = "https://fivem-proxy.twojanazwa.workers.dev/?url=";
-    // =========================================================================
+    // Opcjonalne pole proxy (puste oznacza automatyczny wybór publicznych serwerów proxy)
     const MY_PROXY = ""; 
 
     let players = [];
@@ -173,6 +170,34 @@
     }
     document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
 
+    // Automatyczna rotacja i próby ominięcia blokad przez publiczne proxy
+    async function fetchServerData(serverId) {
+        const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${serverId}`;
+        
+        if (MY_PROXY) {
+            try {
+                const res = await fetch(`${MY_PROXY}${encodeURIComponent(targetUrl)}`);
+                if (res.ok) { const json = await res.json(); if (json && json.Data) return json.Data; }
+            } catch(e) {}
+        }
+
+        const publicProxies = [
+            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+        ];
+
+        for (let proxyUrl of publicProxies) {
+            try {
+                const res = await fetch(proxyUrl);
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json && json.Data) return json.Data;
+                }
+            } catch(e) {}
+        }
+        return null;
+    }
+
     async function getData(isManual = false) {
         const select = document.getElementById('serverSelect');
         const custom = document.getElementById('customSrv');
@@ -192,14 +217,8 @@
         else title.innerText = "Server Finder";
         
         refreshBtn.innerText = "...";
-
-        if (!MY_PROXY) {
-            statusDot.className = "dot error";
-            statusText.innerText = "BRAK PROXY";
-            refreshBtn.innerText = "ODŚWIEŻ";
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Skonfiguruj zmienną MY_PROXY w kodzie strony.</p>";
-            return;
-        }
+        statusDot.className = "dot";
+        statusText.innerText = "ŁĄCZENIE...";
 
         if (isManual) {
             players = [];
@@ -207,30 +226,21 @@
             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie danych...</p>";
         }
         
-        const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
-        
-        try {
-            const res = await fetch(`${MY_PROXY}${encodeURIComponent(targetUrl)}`);
-            if (!res.ok) throw new Error();
-            
-            const serverData = await res.json();
+        const serverData = await fetchServerData(sID);
 
-            if (serverData && serverData.Data) {
-                statusDot.className = "dot online";
-                statusText.innerText = "POŁĄCZONO";
-                
-                players = serverData.Data.players || [];
-                totalClients = serverData.Data.clients !== undefined ? serverData.Data.clients : players.length;
-                
-                render();
-            } else {
-                throw new Error();
-            }
-        } catch (err) {
+        if (serverData) {
+            statusDot.className = "dot online";
+            statusText.innerText = "POŁĄCZONO";
+            
+            players = serverData.players || [];
+            totalClients = serverData.clients !== undefined ? serverData.clients : players.length;
+            
+            render();
+        } else {
             statusDot.className = "dot error";
-            statusText.innerText = "BLOKADA";
+            statusText.innerText = "BLOKADA API";
             document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Nie udało się połączyć z API FiveM.</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>FiveM odrzuciło połączenie. Spróbuj kliknąć ODŚWIEŻ za chwilę.</p>";
         }
         refreshBtn.innerText = "ODŚWIEŻ";
     }
