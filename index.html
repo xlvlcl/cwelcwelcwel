@@ -95,7 +95,7 @@
         .card > * { z-index: 2; position: relative; }
         .ping-badge { font-size: 0.75rem; font-family: monospace; font-weight: bold; color: var(--theme); transition: 0.3s; flex-shrink: 0; }
         .id-box { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--theme); font-weight: bold; padding: 4px 10px; border-radius: 6px; font-family: monospace; transition: 0.3s; flex-shrink: 0; }
-        .nick-txt { flex: 1; font-weight: 600; font-size: 1.05rem; transition: 0.3s; padding-right: 28px; line-height: 1.2; }
+        .nick-txt { flex: 1; font-weight: 600; font-size: 1.05rem; transition: 0.3s; padding-right: 28px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .card:hover .ping-badge, .card:hover .nick-txt { color: #fff; text-shadow: 0 0 5px var(--theme-glow); }
         .card:hover .id-box { background: var(--theme); color: #000; border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); }
 
@@ -194,97 +194,56 @@
         refreshBtn.innerText = "...";
         if(isManual) refreshBtn.disabled = true;
 
-        if (isManual) {
-            players = [];
-            totalClients = 0;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie najnowszych danych (to może chwilę potrwać)...</p>";
+        if (isManual && players.length === 0) {
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie bezpośrednio z FiveM...</p>";
         }
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
-        const fetchMethods = [
-            { name: "Brama 1 (AllOrigins)", url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, type: 'wrapped' },
-            { name: "Brama 2 (CorsProxy)", url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, type: 'raw' },
-            { name: "Brama 3 (CodeTabs)", url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, type: 'raw' },
-            { name: "Bezpośrednie (CORS-Extension)", url: targetUrl, type: 'raw' }
-        ];
-
-        let success = false;
-        let finalData = null;
-        let lastErrorMsg = "Brak odpowiedzi ze źródeł sieciowych.";
-
-        for (let method of fetchMethods) {
-            try {
-                logDebug(`Próba połączenia: ${method.name}...`);
-                const res = await fetch(method.url);
-                
-                if (!res.ok) {
-                    lastErrorMsg = `${method.name} zwrócił błąd HTTP ${res.status}`;
-                    continue;
-                }
-
-                const responseText = await res.text();
-                if (!responseText || responseText.trim().length === 0) {
-                    lastErrorMsg = `${method.name} przysłał pusty tekst`;
-                    continue;
-                }
-
-                let parsedRoot;
-                try {
-                    parsedRoot = JSON.parse(responseText);
-                } catch(e) {
-                    lastErrorMsg = `${method.name} wysłał uszkodzony/obcięty JSON (za duży plik dla bramki)`;
-                    continue;
-                }
-
-                // Inteligentne rozpakowywanie struktury w zależności od bramki proxy
-                let serverData = null;
-                if (method.type === 'wrapped' && parsedRoot.contents) {
-                    try {
-                        serverData = JSON.parse(parsedRoot.contents);
-                    } catch(e) {
-                        lastErrorMsg = `${method.name} zawartość 'contents' była uszkodzona`;
-                        continue;
-                    }
-                } else {
-                    serverData = parsedRoot;
-                }
-
-                if (serverData && serverData.Data) {
-                    finalData = serverData;
-                    success = true;
-                    logDebug(`Sukces! Dane pobrane przez: ${method.name}`);
-                    break;
-                } else {
-                    lastErrorMsg = `${method.name} nie zawierał wymaganej struktury danych FiveM`;
-                }
-
-            } catch (e) {
-                lastErrorMsg = `Błąd sieci w ${method.name}: ${e.message}`;
-            }
-        }
-        
-        if (success && finalData && finalData.Data) {
-            players = finalData.Data.players || [];
-            totalClients = typeof finalData.Data.clients !== 'undefined' ? finalData.Data.clients : players.length;
+        try {
+            logDebug(`Wysyłanie bezpośredniego żądania do FiveM API...`);
             
-            document.getElementById('fivem-dot').className = "dot online";
-            document.getElementById('fivem-text').innerText = "ONLINE";
-            render();
-        } else {
-            players = [];
-            totalClients = 0;
-            document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
+            // Czysty, bezpośredni fetch bez pośredników proxy
+            const res = await fetch(targetUrl, {
+                method: 'GET',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}. Upewnij się, że rozszerzenie CORS w przeglądarce jest WŁĄCZONE!`);
+            }
+
+            const serverData = await res.json();
+
+            if (serverData && serverData.Data) {
+                players = serverData.Data.players || [];
+                totalClients = serverData.Data.clients !== undefined ? serverData.Data.clients : players.length;
+                
+                document.getElementById('fivem-dot').className = "dot online";
+                document.getElementById('fivem-text').innerText = "ONLINE";
+                logDebug(`Pobrano pomyślnie! Graczy: ${players.length}`);
+                render();
+            } else {
+                throw new Error("Otrzymano pustą strukturę danych.");
+            }
+
+        } catch (e) {
             document.getElementById('fivem-dot').className = "dot error";
-            document.getElementById('fivem-text').innerText = "BLOKADA";
-            logDebug(`Wszystkie próby zawiodły. Powód: ${lastErrorMsg}`, true);
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Wystąpił problem z pobraniem danych z zewnętrznej bramki. Kliknij ODŚWIEŻ za moment.</p>";
+            document.getElementById('fivem-text').innerText = "BLOKADA CORS";
+            logDebug(e.message, true);
+            if(players.length === 0) {
+                grid.innerHTML = `<p style='grid-column:1/-1; opacity:0.7; text-align:center; color:var(--danger); font-weight:bold;'>
+                    [BŁĄD POŁĄCZENIA]<br>
+                    FiveM blokuje zapytanie. Aby skrypt działał, musisz włączyć rozszerzenie CORS w przeglądarce.
+                </p>`;
+            }
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
-        if(isManual) {
-            setTimeout(() => { refreshBtn.disabled = false; }, 2000); 
-        }
+        refreshBtn.disabled = false;
     }
 
     function manualRefresh() { getData(true); }
@@ -295,10 +254,12 @@
         const grid = document.getElementById('grid');
         const counter = document.getElementById('counter');
 
-        let filtered = players.filter(p => 
-            (sidVal ? p.id.toString().startsWith(sidVal) : true) &&
-            (nickVal ? p.name.toLowerCase().includes(nickVal) : true)
-        );
+        let filtered = players.filter(p => {
+            if(!p) return false;
+            let matchId = sidVal ? p.id.toString().startsWith(sidVal) : true;
+            let matchNick = nickVal ? (p.name && p.name.toLowerCase().includes(nickVal)) : true;
+            return matchId && matchNick;
+        });
 
         filtered.sort((a, b) => {
             let aFav = favs.includes(a.id);
@@ -312,39 +273,34 @@
 
         if (!showList) { grid.innerHTML = ""; return; }
 
-        if (players.length === 0) {
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na pobranej liście lub serwer jest pusty.</p>";
-        } else {
-            grid.innerHTML = filtered.map(p => {
-                let isFav = favs.includes(p.id);
-                let favClass = isFav ? 'active' : '';
-                let favIcon = isFav ? '★' : '☆'; 
-                
-                let playerName = p.name || p.identifiers?.[0] || "Nieznany";
-                let playerPing = p.ping !== undefined ? p.ping : "?";
-
-                return `
-                <div class="card">
-                    <div class="ping-badge">${playerPing}ms</div>
-                    <div class="id-box">#${p.id}</div>
-                    <div class="nick-txt" title="${playerName}">${playerName}</div>
-                    <button class="fav-btn ${favClass}" onclick="toggleFav(${p.id})">${favIcon}</button>
-                </div>
-                `;
-            }).join('');
+        if (filtered.length === 0) {
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak wyników.</p>";
+            return;
         }
+
+        grid.innerHTML = filtered.map(p => {
+            let isFav = favs.includes(p.id);
+            let favClass = isFav ? 'active' : '';
+            let favIcon = isFav ? '★' : '☆'; 
+            let playerName = p.name || "Nieznany";
+            let playerPing = p.ping !== undefined ? p.ping : "?";
+
+            return `
+            <div class="card">
+                <div class="ping-badge">${playerPing}ms</div>
+                <div class="id-box">#${p.id}</div>
+                <div class="nick-txt" title="${playerName}">${playerName}</div>
+                <button class="fav-btn ${favClass}" onclick="toggleFav(${p.id})">${favIcon}</button>
+            </div>
+            `;
+        }).join('');
     }
 
     function toggleList() {
         showList = !showList;
         const btn = document.getElementById('btnToggle');
-        if (showList) {
-            btn.innerText = "Ukryj listę";
-            btn.classList.add('active');
-        } else {
-            btn.innerText = "Pokaż listę";
-            btn.classList.remove('active');
-        }
+        btn.innerText = showList ? "Ukryj listę" : "Pokaż listę";
+        if(showList) btn.classList.add('active'); else btn.classList.remove('remove');
         render();
     }
 
@@ -357,13 +313,12 @@
 
     function renderDebounced() {
         clearTimeout(renderTimeout);
-        renderTimeout = setTimeout(render, 150);
+        renderTimeout = setTimeout(render, 100);
     }
 
     function checkCustomServer() {
         const selectVal = document.getElementById('serverSelect').value;
         document.getElementById('customSrv').style.display = selectVal === 'custom' ? 'block' : 'none';
-        
         localStorage.setItem('grandrp_last_server', selectVal);
         getData(true); 
     }
@@ -374,14 +329,13 @@
     const savedServer = localStorage.getItem('grandrp_last_server');
     if(savedServer) {
         document.getElementById('serverSelect').value = savedServer;
-        if(savedServer === 'custom') {
-            document.getElementById('customSrv').style.display = 'block';
-        }
+        if(savedServer === 'custom') document.getElementById('customSrv').style.display = 'block';
     }
 
     document.getElementById('customSrv').addEventListener('input', (e) => {
         localStorage.setItem('grandrp_custom_id', e.target.value);
     });
+    
     const savedCustom = localStorage.getItem('grandrp_custom_id');
     if(savedCustom) document.getElementById('customSrv').value = savedCustom;
 
