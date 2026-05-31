@@ -197,65 +197,76 @@
         if (isManual) {
             players = [];
             totalClients = 0;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie najnowszych danych...</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie najnowszych danych (to może chwilę potrwać)...</p>";
         }
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
         const fetchMethods = [
-            { name: "Połączenie bezpośrednie", url: targetUrl },
-            { name: "Brama 1 (corsproxy.io)", url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}` },
-            { name: "Brama 2 (allorigins raw)", url: `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}` },
-            { name: "Brama 3 (codetabs)", url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}` }
+            { name: "Brama 1 (AllOrigins)", url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, type: 'wrapped' },
+            { name: "Brama 2 (CorsProxy)", url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, type: 'raw' },
+            { name: "Brama 3 (CodeTabs)", url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, type: 'raw' },
+            { name: "Bezpośrednie (CORS-Extension)", url: targetUrl, type: 'raw' }
         ];
 
         let success = false;
-        let data = null;
-        let lastErrorMsg = "Brak stabilnej odpowiedzi z sieci.";
+        let finalData = null;
+        let lastErrorMsg = "Brak odpowiedzi ze źródeł sieciowych.";
 
         for (let method of fetchMethods) {
             try {
-                logDebug(`Próba: ${method.name}...`);
+                logDebug(`Próba połączenia: ${method.name}...`);
                 const res = await fetch(method.url);
                 
                 if (!res.ok) {
-                    lastErrorMsg = `${method.name} zgłosił błąd HTTP ${res.status}`;
+                    lastErrorMsg = `${method.name} zwrócił błąd HTTP ${res.status}`;
                     continue;
                 }
 
-                const text = await res.text();
-                if (!text || text.trim().length === 0) {
-                    lastErrorMsg = `${method.name} zwrócił pustą zawartość`;
+                const responseText = await res.text();
+                if (!responseText || responseText.trim().length === 0) {
+                    lastErrorMsg = `${method.name} przysłał pusty tekst`;
                     continue;
                 }
 
-                if (text.trim().startsWith("<!DOCTYPE html>")) {
-                    lastErrorMsg = `${method.name} natrafił na filtr Cloudflare`;
-                    continue;
-                }
-
+                let parsedRoot;
                 try {
-                    data = JSON.parse(text);
+                    parsedRoot = JSON.parse(responseText);
                 } catch(e) {
-                    lastErrorMsg = `${method.name} wysłał niepoprawny format danych`;
+                    lastErrorMsg = `${method.name} wysłał uszkodzony/obcięty JSON (za duży plik dla bramki)`;
                     continue;
                 }
 
-                if (data && data.Data) {
+                // Inteligentne rozpakowywanie struktury w zależności od bramki proxy
+                let serverData = null;
+                if (method.type === 'wrapped' && parsedRoot.contents) {
+                    try {
+                        serverData = JSON.parse(parsedRoot.contents);
+                    } catch(e) {
+                        lastErrorMsg = `${method.name} zawartość 'contents' była uszkodzona`;
+                        continue;
+                    }
+                } else {
+                    serverData = parsedRoot;
+                }
+
+                if (serverData && serverData.Data) {
+                    finalData = serverData;
                     success = true;
-                    logDebug(`Sukces! Połączono przez: ${method.name}`);
+                    logDebug(`Sukces! Dane pobrane przez: ${method.name}`);
                     break;
                 } else {
-                    lastErrorMsg = `${method.name} nie zawierał struktury 'Data'`;
+                    lastErrorMsg = `${method.name} nie zawierał wymaganej struktury danych FiveM`;
                 }
+
             } catch (e) {
                 lastErrorMsg = `Błąd sieci w ${method.name}: ${e.message}`;
             }
         }
         
-        if (success && data && data.Data) {
-            players = data.Data.players || [];
-            totalClients = typeof data.Data.clients !== 'undefined' ? data.Data.clients : players.length;
+        if (success && finalData && finalData.Data) {
+            players = finalData.Data.players || [];
+            totalClients = typeof finalData.Data.clients !== 'undefined' ? finalData.Data.clients : players.length;
             
             document.getElementById('fivem-dot').className = "dot online";
             document.getElementById('fivem-text').innerText = "ONLINE";
@@ -266,8 +277,8 @@
             document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
             document.getElementById('fivem-dot').className = "dot error";
             document.getElementById('fivem-text').innerText = "BLOKADA";
-            logDebug(`Błąd połączenia. Powód: ${lastErrorMsg}`, true);
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Serwer nie przesłał danych graczy. Spróbuj odświeżyć za chwilę.</p>";
+            logDebug(`Wszystkie próby zawiodły. Powód: ${lastErrorMsg}`, true);
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Wystąpił problem z pobraniem danych z zewnętrznej bramki. Kliknij ODŚWIEŻ za moment.</p>";
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
@@ -302,11 +313,7 @@
         if (!showList) { grid.innerHTML = ""; return; }
 
         if (players.length === 0) {
-            if (totalClients > 0) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak kafelek szczegółowych:</strong> Serwer ukrył pełną listę nazwisk w API FiveM ze względów bezpieczeństwa. Główny licznik osób na górze działa prawidłowo.</p>";
-            } else {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak osób online.</p>";
-            }
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na pobranej liście lub serwer jest pusty.</p>";
         } else {
             grid.innerHTML = filtered.map(p => {
                 let isFav = favs.includes(p.id);
