@@ -14,7 +14,6 @@
             --text: #ffffff;
             --text-dim: #888;
             --gold: #ffcc00;
-            --danger: #ff4444;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,6 +30,7 @@
             overflow-x: hidden;
         }
 
+        /* --- TŁO --- */
         .background-fx {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
             background: radial-gradient(at 0% 0%, var(--theme-glow) 0px, transparent 60%),
@@ -41,6 +41,7 @@
 
         .wrapper { width: 100%; max-width: 1300px; position: relative; padding-bottom: 50px; }
 
+        /* --- STATUS --- */
         .system-status {
             position: absolute; top: 0; left: 0; display: flex; flex-direction: column; gap: 8px;
             padding: 10px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
@@ -49,9 +50,9 @@
         .status-item { display: flex; align-items: center; gap: 10px; font-size: 0.75rem; font-weight: bold; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background: #333; transition: 0.3s; }
         .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
-        .dot.error { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
         .status-label { color: var(--theme); text-transform: uppercase; }
 
+        /* THEME PANEL */
         .theme-panel {
             position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 10px;
             padding: 8px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
@@ -64,6 +65,7 @@
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
         h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; transition: 0.5s; }
 
+        /* CONTROLS */
         .controls { 
             background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(15px); padding: 25px; 
             border-radius: 12px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; 
@@ -74,15 +76,13 @@
         input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); background: rgba(0,0,0,0.6); }
         
         .btn-group button { padding: 12px 30px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); color: var(--theme); border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; height: 48px; }
-        .btn-group button:hover:not(:disabled) { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
-        .btn-group button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #555; color: #555; }
-
-        .debug-console { width: 100%; font-family: monospace; font-size: 0.8rem; color: #aaa; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); text-align: center; margin-top: 10px; word-break: break-all; }
+        .btn-group button:hover { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
 
         .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 25px 0; width: 100%; }
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
 
+        /* --- KAFELKI --- */
         #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         .card { 
             background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -111,7 +111,7 @@
 
 <div class="wrapper">
     <div class="system-status">
-        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">FiveM API:</span> <span id="fivem-text">OCZEKIWANIE</span></div>
+        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">FiveM:</span> <span id="fivem-text">ONLINE</span></div>
     </div>
     
     <div class="theme-panel">
@@ -140,8 +140,6 @@
             <button id="refreshBtn" onclick="manualRefresh()">ODŚWIEŻ</button>
             <button id="btnToggle" class="active" onclick="toggleList()">Ukryj listę</button>
         </div>
-        
-        <div class="debug-console" id="debugLog">Status logów: Oczekiwanie na zapytanie...</div>
     </div>
 
     <div class="stats-bar"><span id="counter">Online: <strong>0</strong></span></div>
@@ -155,12 +153,6 @@
     let showList = true;
     let favs = JSON.parse(localStorage.getItem('grandrp_favs')) || [];
     let renderTimeout;
-
-    function logDebug(msg, isError = false) {
-        const consoleEl = document.getElementById('debugLog');
-        consoleEl.innerText = `LOGS: ${msg}`;
-        consoleEl.style.color = isError ? 'var(--danger)' : '#aaa';
-    }
 
     function hexToRgb(hex) {
         let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -192,58 +184,84 @@
         else title.innerText = "Server Finder";
         
         refreshBtn.innerText = "...";
-        if(isManual) refreshBtn.disabled = true;
 
-        if (isManual && players.length === 0) {
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie bezpośrednio z FiveM...</p>";
+        if (isManual) {
+            players = [];
+            totalClients = 0;
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Łączenie z serwerem i pobieranie danych...</p>";
         }
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
-        try {
-            logDebug(`Wysyłanie bezpośredniego żądania do FiveM API...`);
-            
-            // Czysty, bezpośredni fetch bez pośredników proxy
-            const res = await fetch(targetUrl, {
-                method: 'GET',
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                    'Accept': 'application/json'
-                }
-            });
+        // Nowe, stabilne punkty dostępowe omijające ograniczenia Cloudflare
+        const sources = [
+            `https://cors-anywhere.mirror.workers.dev/?url=${encodeURIComponent(targetUrl)}`,
+            `https://images.weserv.nl/?url=${encodeURIComponent(targetUrl)}&output=json`
+        ];
 
-            if (!res.ok) {
-                throw new Error(`HTTP ${res.status}. Upewnij się, że rozszerzenie CORS w przeglądarce jest WŁĄCZONE!`);
-            }
+        let success = false;
+        let tempPlayers = [];
+        let tempClients = 0;
+        let serverIp = null; 
 
-            const serverData = await res.json();
-
-            if (serverData && serverData.Data) {
-                players = serverData.Data.players || [];
-                totalClients = serverData.Data.clients !== undefined ? serverData.Data.clients : players.length;
+        // ETAP 1
+        for (let source of sources) {
+            try {
+                const res = await fetch(source);
+                if (!res.ok) continue; 
                 
-                document.getElementById('fivem-dot').className = "dot online";
-                document.getElementById('fivem-text').innerText = "ONLINE";
-                logDebug(`Pobrano pomyślnie! Graczy: ${players.length}`);
-                render();
-            } else {
-                throw new Error("Otrzymano pustą strukturę danych.");
-            }
+                const data = await res.json();
+                if (data && data.Data) {
+                    tempPlayers = data.Data.players || [];
+                    tempClients = data.Data.clients || tempPlayers.length;
+                    
+                    if (data.Data.connectEndPoints && data.Data.connectEndPoints.length > 0) {
+                        serverIp = data.Data.connectEndPoints[0];
+                    }
+                    
+                    success = true;
+                    break;
+                }
+            } catch (e) { }
+        }
 
-        } catch (e) {
-            document.getElementById('fivem-dot').className = "dot error";
-            document.getElementById('fivem-text').innerText = "BLOKADA CORS";
-            logDebug(e.message, true);
-            if(players.length === 0) {
-                grid.innerHTML = `<p style='grid-column:1/-1; opacity:0.7; text-align:center; color:var(--danger); font-weight:bold;'>
-                    [BŁĄD POŁĄCZENIA]<br>
-                    FiveM blokuje zapytanie. Aby skrypt działał, musisz włączyć rozszerzenie CORS w przeglądarce.
-                </p>`;
+        // ETAP 2: Pobieranie bezpośrednie jeśli lista ukryta
+        if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
+            if(isManual) grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>API ukrywa graczy. Próba bezpośredniego pobrania (Direct IP)...</p>";
+            
+            const directUrl = `http://${serverIp}/players.json`;
+            const proxySources = [
+                `https://cors-anywhere.mirror.workers.dev/?url=${encodeURIComponent(directUrl)}`
+            ];
+
+            for (let proxy of proxySources) {
+                try {
+                    const directRes = await fetch(proxy);
+                    if (!directRes.ok) continue;
+                    
+                    const directData = await directRes.json();
+                    if (Array.isArray(directData) && directData.length > 0) {
+                        tempPlayers = directData; 
+                        break;
+                    }
+                } catch(e) { }
             }
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
-        refreshBtn.disabled = false;
+        
+        if (success) {
+            if (isManual) {
+                players = tempPlayers;
+                totalClients = tempClients;
+            } else {
+                if (tempPlayers.length > 0) players = tempPlayers;
+                if (tempClients > 0) totalClients = tempClients;
+            }
+            render();
+        } else if (isManual) {
+             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Błąd pobierania danych z FiveM. Spróbuj ponownie za chwilę.</p>";
+        }
     }
 
     function manualRefresh() { getData(true); }
@@ -254,12 +272,10 @@
         const grid = document.getElementById('grid');
         const counter = document.getElementById('counter');
 
-        let filtered = players.filter(p => {
-            if(!p) return false;
-            let matchId = sidVal ? p.id.toString().startsWith(sidVal) : true;
-            let matchNick = nickVal ? (p.name && p.name.toLowerCase().includes(nickVal)) : true;
-            return matchId && matchNick;
-        });
+        let filtered = players.filter(p => 
+            (sidVal ? p.id.toString().startsWith(sidVal) : true) &&
+            (nickVal ? p.name.toLowerCase().includes(nickVal) : true)
+        );
 
         filtered.sort((a, b) => {
             let aFav = favs.includes(a.id);
@@ -273,34 +289,43 @@
 
         if (!showList) { grid.innerHTML = ""; return; }
 
-        if (filtered.length === 0) {
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak wyników.</p>";
-            return;
+        if (players.length === 0) {
+            if (totalClients > 0) {
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer całkowicie zablokował dostęp do listy graczy.</p>";
+            } else {
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na serwerze.</p>";
+            }
+        } else {
+            grid.innerHTML = filtered.map(p => {
+                let isFav = favs.includes(p.id);
+                let favClass = isFav ? 'active' : '';
+                let favIcon = isFav ? '★' : '☆'; 
+                
+                let playerName = p.name || "Nieznany";
+                let playerPing = p.ping !== undefined ? p.ping : "?";
+
+                return `
+                <div class="card">
+                    <div class="ping-badge">${playerPing}ms</div>
+                    <div class="id-box">#${p.id}</div>
+                    <div class="nick-txt" title="${playerName}">${playerName}</div>
+                    <button class="fav-btn ${favClass}" onclick="toggleFav(${p.id})">${favIcon}</button>
+                </div>
+                `;
+            }).join('');
         }
-
-        grid.innerHTML = filtered.map(p => {
-            let isFav = favs.includes(p.id);
-            let favClass = isFav ? 'active' : '';
-            let favIcon = isFav ? '★' : '☆'; 
-            let playerName = p.name || "Nieznany";
-            let playerPing = p.ping !== undefined ? p.ping : "?";
-
-            return `
-            <div class="card">
-                <div class="ping-badge">${playerPing}ms</div>
-                <div class="id-box">#${p.id}</div>
-                <div class="nick-txt" title="${playerName}">${playerName}</div>
-                <button class="fav-btn ${favClass}" onclick="toggleFav(${p.id})">${favIcon}</button>
-            </div>
-            `;
-        }).join('');
     }
 
     function toggleList() {
         showList = !showList;
         const btn = document.getElementById('btnToggle');
-        btn.innerText = showList ? "Ukryj listę" : "Pokaż listę";
-        if(showList) btn.classList.add('active'); else btn.classList.remove('remove');
+        if (showList) {
+            btn.innerText = "Ukryj listę";
+            btn.classList.add('active');
+        } else {
+            btn.innerText = "Pokaż listę";
+            btn.classList.remove('active');
+        }
         render();
     }
 
@@ -313,34 +338,37 @@
 
     function renderDebounced() {
         clearTimeout(renderTimeout);
-        renderTimeout = setTimeout(render, 100);
+        renderTimeout = setTimeout(render, 150);
     }
 
     function checkCustomServer() {
         const selectVal = document.getElementById('serverSelect').value;
         document.getElementById('customSrv').style.display = selectVal === 'custom' ? 'block' : 'none';
+        
         localStorage.setItem('grandrp_last_server', selectVal);
         getData(true); 
     }
 
+    // --- START ---
     const savedTheme = localStorage.getItem('grandrp_theme');
     if(savedTheme) setTheme(savedTheme);
 
     const savedServer = localStorage.getItem('grandrp_last_server');
     if(savedServer) {
         document.getElementById('serverSelect').value = savedServer;
-        if(savedServer === 'custom') document.getElementById('customSrv').style.display = 'block';
+        if(savedServer === 'custom') {
+            document.getElementById('customSrv').style.display = 'block';
+        }
     }
 
     document.getElementById('customSrv').addEventListener('input', (e) => {
         localStorage.setItem('grandrp_custom_id', e.target.value);
     });
-    
     const savedCustom = localStorage.getItem('grandrp_custom_id');
     if(savedCustom) document.getElementById('customSrv').value = savedCustom;
 
     getData(true); 
-    setInterval(() => getData(false), 30000); 
+    setInterval(() => getData(false), 60000); 
 </script>
 </body>
 </html>
