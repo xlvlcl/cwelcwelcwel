@@ -30,7 +30,6 @@
             overflow-x: hidden;
         }
 
-        /* --- TŁO --- */
         .background-fx {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
             background: radial-gradient(at 0% 0%, var(--theme-glow) 0px, transparent 60%),
@@ -41,7 +40,6 @@
 
         .wrapper { width: 100%; max-width: 1300px; position: relative; padding-bottom: 50px; }
 
-        /* --- STATUS --- */
         .system-status {
             position: absolute; top: 0; left: 0; display: flex; flex-direction: column; gap: 8px;
             padding: 10px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
@@ -52,7 +50,6 @@
         .dot.online { background: var(--theme); box-shadow: 0 0 8px var(--theme); }
         .status-label { color: var(--theme); text-transform: uppercase; }
 
-        /* THEME PANEL */
         .theme-panel {
             position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 10px;
             padding: 8px 15px; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
@@ -65,7 +62,6 @@
         header { text-align: center; margin-bottom: 30px; padding-top: 20px; }
         h1 { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; background: linear-gradient(to bottom, #fff 40%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; transition: 0.5s; }
 
-        /* CONTROLS */
         .controls { 
             background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(15px); padding: 25px; 
             border-radius: 12px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.08); margin-bottom: 20px; 
@@ -83,7 +79,6 @@
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
         #counter strong { color: var(--theme); text-shadow: 0 0 15px var(--theme); }
 
-        /* --- KAFELKI --- */
         #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; width: 100%; }
         .card { 
             background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -112,7 +107,7 @@
 
 <div class="wrapper">
     <div class="system-status">
-        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">FiveM:</span> <span id="fivem-text">ONLINE</span></div>
+        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">FiveM API:</span> <span id="fivem-text">POŁĄCZONO</span></div>
     </div>
     
     <div class="theme-panel">
@@ -190,104 +185,45 @@
         if (isManual) {
             players = [];
             totalClients = 0;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Łączenie z serwerem i pobieranie danych...</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Pobieranie danych bezpośrednio z API FiveM...</p>";
         }
         
+        // Bezpośredni link do oficjalnego API FiveM (omijamy zablokowane serwery proxy)
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
-        const proxyConfigs = [
-            { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, type: 'wrapped' },
-            { url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, type: 'raw' },
-            { url: `https://corsproxy.org/?url=${encodeURIComponent(targetUrl)}`, type: 'raw' },
-            { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, type: 'raw' }
-        ];
-
-        let success = false;
-        let tempPlayers = [];
-        let tempClients = 0;
-        let serverIp = null; 
-
-        for (let proxy of proxyConfigs) {
-            try {
-                const res = await fetch(proxy.url);
-                if (!res.ok) continue; 
+        try {
+            const res = await fetch(targetUrl, {
+                method: 'GET',
+                headers: { 'User-Agent': 'Mozilla/5.0' }
+            });
+            
+            if (!res.ok) throw new Error("Błąd odpowiedzi sieci");
+            
+            const data = await res.json();
+            
+            if (data && data.Data) {
+                players = data.Data.players || [];
+                totalClients = typeof data.Data.clients !== 'undefined' ? data.Data.clients : players.length;
                 
-                let data = null;
-                if (proxy.type === 'wrapped') {
-                    const jsonWrapper = await res.json();
-                    if (jsonWrapper && jsonWrapper.contents) {
-                        data = JSON.parse(jsonWrapper.contents);
-                    }
-                } else {
-                    const text = await res.text();
-                    if (text.includes("Cloudflare") || text.includes("<!DOCTYPE html>")) continue;
-                    data = JSON.parse(text);
-                }
-                
-                if (data && data.Data) {
-                    tempPlayers = data.Data.players || [];
-                    tempClients = typeof data.Data.clients !== 'undefined' ? data.Data.clients : tempPlayers.length;
-                    
-                    if (data.Data.connectEndPoints && data.Data.connectEndPoints.length > 0) {
-                        serverIp = data.Data.connectEndPoints[0];
-                    }
-                    
-                    success = true;
-                    break; 
-                }
-            } catch (e) {
-                // błąd parsowania sieciowego - skrypt przechodzi cicho dalej
+                document.getElementById('fivem-dot').className = "dot online";
+                document.getElementById('fivem-text').innerText = "ONLINE";
+                render();
+            } else {
+                throw new Error("Błędna struktura danych");
             }
-        }
-
-        // Rezerwowe Direct IP (jeśli lista główna ukryta)
-        if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
-            const directUrl = `http://${serverIp}/players.json`;
-            const directProxies = [
-                { url: `https://corsproxy.io/?${encodeURIComponent(directUrl)}`, type: 'raw' },
-                { url: `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`, type: 'wrapped' }
-            ];
-
-            for (let proxy of directProxies) {
-                try {
-                    const directRes = await fetch(proxy.url);
-                    if (!directRes.ok) continue;
-                    let directData = null;
-                    if (proxy.type === 'wrapped') {
-                        const jsonWrapper = await directRes.json();
-                        if (jsonWrapper && jsonWrapper.contents) directData = JSON.parse(jsonWrapper.contents);
-                    } else {
-                        const text = await directRes.text();
-                        directData = JSON.parse(text);
-                    }
-                    if (Array.isArray(directData) && directData.length > 0) {
-                        tempPlayers = directData; 
-                        break;
-                    }
-                } catch(e) { }
-            }
+        } catch (e) {
+            // W razie braku włączonej wtyczki CORS lub błędu sieci, licznik bezpiecznie zeruje się
+            players = [];
+            totalClients = 0;
+            document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
+            document.getElementById('fivem-dot').className = "dot";
+            document.getElementById('fivem-text').innerText = "BLOKADA CORS / OFFLINE";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center; color:#ff4444;'>Upewnij się, że masz włączoną wtyczkę 'Allow CORS' w przeglądarce, aby pobrać dane.</p>";
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
         if(isManual) {
-            setTimeout(() => { refreshBtn.disabled = false; }, 4000); 
-        }
-        
-        if (success) {
-            if (isManual) {
-                players = tempPlayers;
-                totalClients = tempClients;
-            } else {
-                if (tempPlayers.length > 0) players = tempPlayers;
-                if (tempClients > 0) totalClients = tempClients;
-            }
-            render();
-        } else {
-            // W razie błędu sieci czyszczone są tablice i ustawiane czyste 0 bez błędów tekstowych
-            players = [];
-            totalClients = 0;
-            document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak połączenia lub serwer offline.</p>";
+            setTimeout(() => { refreshBtn.disabled = false; }, 2000); 
         }
     }
 
@@ -376,7 +312,6 @@
         getData(true); 
     }
 
-    // --- START ---
     const savedTheme = localStorage.getItem('grandrp_theme');
     if(savedTheme) setTheme(savedTheme);
 
@@ -395,7 +330,7 @@
     if(savedCustom) document.getElementById('customSrv').value = savedCustom;
 
     getData(true); 
-    setInterval(() => getData(false), 60000); 
+    setInterval(() => getData(false), 30000); 
 </script>
 </body>
 </html>
