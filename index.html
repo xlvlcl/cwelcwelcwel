@@ -76,7 +76,8 @@
         input:focus, select:focus { border-color: var(--theme); box-shadow: 0 0 10px var(--theme-glow); background: rgba(0,0,0,0.6); }
         
         .btn-group button { padding: 12px 30px; background: rgba(0,0,0,0.4); border: 1px solid var(--theme); color: var(--theme); border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; height: 48px; }
-        .btn-group button:hover { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
+        .btn-group button:hover:not(:disabled) { background: var(--theme); color: #000; box-shadow: 0 0 20px var(--theme); }
+        .btn-group button:disabled { opacity: 0.5; cursor: not-allowed; border-color: #555; color: #555; }
 
         .stats-bar { display: flex; justify-content: center; align-items: center; margin: 10px 0 25px 0; width: 100%; }
         #counter { font-size: 1.8rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
@@ -129,6 +130,7 @@
             <select id="serverSelect" onchange="checkCustomServer()">
                 <option value="96ky6e" selected>GrandRP (PL)</option>
                 <option value="z75e35">BetterSide</option>
+                <option value="ler8myo">OsloRP</option>
                 <option value="custom">-- Własne ID --</option>
             </select>
             <input type="text" id="customSrv" class="hidden-input" placeholder="Wpisz ID serwera (np. epk8gp)">
@@ -179,9 +181,12 @@
         
         if(select.value === '96ky6e') title.innerText = "GrandRP Finder";
         else if(select.value === 'z75e35') title.innerText = "BetterSide Finder";
+        else if(select.value === 'ler8myo') title.innerText = "OsloRP Finder";
         else title.innerText = "Server Finder";
         
         refreshBtn.innerText = "...";
+        // Blokada spamu (cooldown) żeby proxy nie zablokowały Twojego IP
+        if(isManual) refreshBtn.disabled = true;
 
         if (isManual) {
             players = [];
@@ -209,7 +214,10 @@
                 const res = await fetch(source);
                 if (!res.ok) continue; 
                 
-                const data = await res.json();
+                const text = await res.text();
+                // Sprawdzamy czy to naprawde JSON (czasem darmowe proxy zwracają błąd html)
+                const data = JSON.parse(text); 
+                
                 if (data && data.Data) {
                     tempPlayers = data.Data.players || [];
                     tempClients = data.Data.clients || tempPlayers.length;
@@ -221,7 +229,9 @@
                     success = true;
                     break;
                 }
-            } catch (e) { }
+            } catch (e) { 
+                // Ignorujemy bledy fetch (np. CORS, rate limits z proxy) i idziemy do kolejnego srodla
+            }
         }
 
         // ETAP 2: Trick omijający puste listy
@@ -240,7 +250,8 @@
                     const directRes = await fetch(proxy);
                     if (!directRes.ok) continue;
                     
-                    const directData = await directRes.json();
+                    const text = await directRes.text();
+                    const directData = JSON.parse(text);
                     if (Array.isArray(directData) && directData.length > 0) {
                         tempPlayers = directData; 
                         break;
@@ -250,6 +261,10 @@
         }
 
         refreshBtn.innerText = "ODŚWIEŻ";
+        // Zwalnianie blokady przycisku po 5 sekundach
+        if(isManual) {
+            setTimeout(() => { refreshBtn.disabled = false; }, 5000);
+        }
         
         if (success) {
             if (isManual) {
@@ -261,7 +276,7 @@
             }
             render();
         } else if (isManual) {
-             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Serwer jest offline lub wpisano błędne ID.</p>";
+             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Serwer jest offline, wpisano błędne ID, albo uderzyłeś w limit proxy (spróbuj znów za minutę).</p>";
         }
     }
 
@@ -294,7 +309,7 @@
             if (totalClients > 0) {
                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'><strong>Brak szczegółów:</strong> Serwer całkowicie zablokował dostęp do listy graczy (nawet przez Direct IP).</p>";
             } else {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na serwerze.</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy na serwerze (albo API zwróciło błąd).</p>";
             }
         } else {
             grid.innerHTML = filtered.map(p => {
