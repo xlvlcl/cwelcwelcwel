@@ -195,8 +195,10 @@
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
-        // Elastyczna konfiguracja proxy - przetwarza poprawnie obiekty i czysty tekst
+        // Dodano połączenie bezpośrednie (typ 'raw' na pierwszym miejscu), 
+        // ponieważ API FiveM aktualnie akceptuje zapytania CORS.
         const proxyConfigs = [
+            { url: targetUrl, type: 'raw' }, 
             { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, type: 'wrapped' },
             { url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, type: 'raw' },
             { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, type: 'raw' },
@@ -208,7 +210,7 @@
         let tempClients = 0;
         let serverIp = null; 
 
-        // ETAP 1: Pobieranie z Master Listy przez proxy działające w pętli
+        // ETAP 1: Pobieranie z Master Listy
         for (let proxy of proxyConfigs) {
             try {
                 const res = await fetch(proxy.url);
@@ -227,7 +229,8 @@
                 
                 if (data && data.Data) {
                     tempPlayers = data.Data.players || [];
-                    tempClients = data.Data.clients || tempPlayers.length;
+                    // Poprawka: używamy sztywnego sprawdzenia, aby 0 nie potraktowało jako "false" i nie nadpisało długością pustej listy graczy
+                    tempClients = typeof data.Data.clients !== 'undefined' ? data.Data.clients : tempPlayers.length;
                     
                     if (data.Data.connectEndPoints && data.Data.connectEndPoints.length > 0) {
                         serverIp = data.Data.connectEndPoints[0];
@@ -237,7 +240,7 @@
                     break; 
                 }
             } catch (e) {
-                // Jeśli jedno proxy wywali błąd (np. Cloudflare HTML), pętla bezpiecznie przechodzi do następnego
+                // Zabezpieczenie przed przerwaniem pętli
             }
         }
 
@@ -276,7 +279,7 @@
 
         refreshBtn.innerText = "ODŚWIEŻ";
         if(isManual) {
-            setTimeout(() => { refreshBtn.disabled = false; }, 4000); // cooldown 4s
+            setTimeout(() => { refreshBtn.disabled = false; }, 4000); 
         }
         
         if (success) {
@@ -289,7 +292,9 @@
             }
             render();
         } else if (isManual) {
-             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Błąd połączenia. Wszystkie darmowe bramki proxy są przeciążone. Odczekaj chwilę i kliknij ODŚWIEŻ.</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Błąd połączenia. Próba pobrania danych z API FiveM nie powiodła się. Odczekaj chwilę i kliknij ODŚWIEŻ.</p>";
+            // Resetujemy licznik również na widoku w przypadku błędu
+            document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
         }
     }
 
@@ -314,6 +319,7 @@
             return a.id - b.id;            
         });
 
+        // Dynamiczny format wyświetlania online
         counter.innerHTML = `Online: <strong>${(sidVal || nickVal) ? filtered.length : totalClients}</strong>`;
 
         if (!showList) { grid.innerHTML = ""; return; }
