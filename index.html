@@ -112,7 +112,7 @@
 
 <div class="wrapper">
     <div class="system-status">
-        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">FiveM:</span> <span id="fivem-text">ONLINE</span></div>
+        <div class="status-item"><div id="fivem-dot" class="dot online"></div><span class="status-label">API:</span> <span id="fivem-text">ŁĄCZENIE</span></div>
     </div>
     
     <div class="theme-panel">
@@ -143,7 +143,7 @@
         </div>
     </div>
 
-    <div class="stats-bar"><span id="counter">Online: <strong>0</strong></span></div>
+    <div class="stats-bar"><span id="counter">Online: <strong>...</strong></span></div>
     
     <div id="grid"></div>
 </div>
@@ -176,6 +176,9 @@
         let sID = select.value === 'custom' ? custom.value : select.value;
         const title = document.getElementById('mainTitle');
         const grid = document.getElementById('grid');
+        const counter = document.getElementById('counter');
+        const statusText = document.getElementById('fivem-text');
+        const statusDot = document.getElementById('fivem-dot');
         
         if (!sID) return;
         
@@ -188,22 +191,21 @@
         if(isManual) refreshBtn.disabled = true;
 
         if (isManual) {
-            players = [];
-            totalClients = 0;
             grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.6; text-align:center;'>Łączenie z serwerem i pobieranie danych...</p>";
         }
         
         const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${sID}`;
         
+        // Zaktualizowana i zoptymalizowana lista bramek CORS proxy
         const proxyConfigs = [
-            { url: targetUrl, type: 'raw' }, 
-            { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, type: 'wrapped' },
+            { url: `https://corsproxy.org/?url=${encodeURIComponent(targetUrl)}`, type: 'raw' },
             { url: `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, type: 'raw' },
+            { url: `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`, type: 'wrapped' },
             { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, type: 'raw' }
         ];
 
         let success = false;
-        let is404 = false; // Flaga wykrycia nieaktywnego ID
+        let is404 = false; 
         let tempPlayers = [];
         let tempClients = 0;
         let serverIp = null; 
@@ -212,7 +214,6 @@
             try {
                 const res = await fetch(proxy.url);
                 
-                // Sprawdzamy status bezpośredni (np. z corsproxy lub direct fetch)
                 if (res.status === 404) {
                     is404 = true;
                     continue;
@@ -227,15 +228,16 @@
                         continue;
                     }
                     if (jsonWrapper && jsonWrapper.contents) {
-                        data = JSON.parse(jsonWrapper.contents);
+                        const contentStr = jsonWrapper.contents;
+                        if (contentStr.includes("Cloudflare") || contentStr.includes("<!DOCTYPE html>") || contentStr.trim().startsWith("<")) continue;
+                        data = JSON.parse(contentStr);
                     }
                 } else {
                     const text = await res.text();
-                    if (text.includes("Cloudflare") || text.includes("<!DOCTYPE html>")) continue; // zablokowane proxy
+                    if (text.includes("Cloudflare") || text.includes("<!DOCTYPE html>") || text.trim().startsWith("<")) continue; 
                     data = JSON.parse(text);
                 }
                 
-                // Sprawdzamy, czy struktura JSON nie zawiera informacji o błędzie 404 ze strony FiveM
                 if (data && (data.error || data.Message === "Not Found")) {
                     is404 = true;
                     continue;
@@ -253,14 +255,15 @@
                     break; 
                 }
             } catch (e) {
-                // błąd parsowania / sieciowy, leci do następnego proxy
+                // błąd parsowania sieciowego - skrypt przechodzi do kolejnego proxy
             }
         }
 
-        // Rezerwowe Direct IP (tylko jak serwer znaleziono, ale schował listę)
+        // Rezerwowe Direct IP (jeśli lista główna ukryta)
         if (success && tempPlayers.length === 0 && tempClients > 0 && serverIp) {
             const directUrl = `http://${serverIp}/players.json`;
             const directProxies = [
+                { url: `https://corsproxy.org/?url=${encodeURIComponent(directUrl)}`, type: 'raw' },
                 { url: `https://corsproxy.io/?${encodeURIComponent(directUrl)}`, type: 'raw' },
                 { url: `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`, type: 'wrapped' }
             ];
@@ -272,10 +275,12 @@
                     let directData = null;
                     if (proxy.type === 'wrapped') {
                         const jsonWrapper = await directRes.json();
-                        if (jsonWrapper && jsonWrapper.contents) directData = JSON.parse(jsonWrapper.contents);
+                        if (jsonWrapper && jsonWrapper.contents && !jsonWrapper.contents.trim().startsWith("<")) {
+                            directData = JSON.parse(jsonWrapper.contents);
+                        }
                     } else {
                         const text = await directRes.text();
-                        directData = JSON.parse(text);
+                        if (!text.trim().startsWith("<")) directData = JSON.parse(text);
                     }
                     if (Array.isArray(directData) && directData.length > 0) {
                         tempPlayers = directData; 
@@ -291,30 +296,47 @@
         }
         
         if (success) {
+            statusText.innerText = "ONLINE";
+            statusText.style.color = "var(--theme)";
+            statusDot.className = "dot online";
+            statusDot.style.backgroundColor = "var(--theme)";
+            
             if (isManual) {
                 players = tempPlayers;
                 totalClients = tempClients;
             } else {
-                if (tempPlayers.length > 0) players = tempPlayers;
-                if (tempClients > 0) totalClients = tempClients;
+                if (tempPlayers.length > 0 || players.length === 0) players = tempPlayers;
+                if (tempClients > 0 || totalClients === 0) totalClients = tempClients;
             }
             render();
         } else {
-            players = [];
-            totalClients = 0;
-            document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
+            // Obsługa błędu - Zamiast resetować licznik do 0, informujemy o problemie z API
+            statusDot.className = "dot";
+            statusDot.style.backgroundColor = "#ff5555";
             
             if (is404) {
+                statusText.innerText = "BŁĄD ID";
+                statusText.style.color = "#ff5555";
+                counter.innerHTML = `Online: <strong style="color: #ff5555;">ZŁY KOD</strong>`;
                 grid.innerHTML = `
                 <div style='grid-column:1/-1; text-align:center; padding: 30px; background: rgba(255, 204, 0, 0.05); border: 1px dashed var(--gold); border-radius: 8px;'>
-                    <p style='color: var(--gold); font-weight: bold; font-size: 1.2rem; margin-bottom: 8px;'>⚠️ BŁĄD 404: Kod ID serwera jest NIEAKTYWNY!</p>
+                    <p style='color: var(--gold); font-weight: bold; font-size: 1.2rem; margin-bottom: 8px;'>⚠️ BŁĄD 404: Kod ID serwera wygasł lub jest nieaktywny!</p>
                     <p style='opacity: 0.7; font-size: 0.9rem; max-width: 600px; margin: 0 auto;'>
-                        Serwer prawdopodobnie przeszedł restart i zmienił swój 6-znakowy identyfikator na nowy. 
-                        Wybierz z listy opcję <strong>-- Własne ID --</strong> i wpisz aktualny kod serwera pobrany z aplikacji FiveM.
+                        Serwery FiveM po restartach maszyn bardzo często zmieniają swoje tymczasowe 6-znakowe ID (Join Code). 
+                        Wybierz z listy opcję <strong>-- Własne ID --</strong> i wpisz aktualny kod serwera, który znajdziesz w aplikacji FiveM lub w linku <code style="color:var(--theme)">cfx.re/join/XXXXXX</code>.
                     </p>
                 </div>`;
-            } else if (isManual) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: #ff5555;'>Błąd połączenia z API. Spróbuj odświeżyć za chwilę.</p>";
+            } else {
+                statusText.innerText = "BLOKADA PROXY";
+                statusText.style.color = "#ff5555";
+                if (isManual || totalClients === 0) {
+                    counter.innerHTML = `Online: <strong style="color: #ff5555;">BŁĄD PROXY</strong>`;
+                    grid.innerHTML = `
+                    <div style='grid-column:1/-1; text-align:center; padding: 25px; background: rgba(255,85,85,0.05); border: 1px dashed #ff5555; border-radius: 8px;'>
+                        <p style="color: #ff5555; font-weight:bold; margin-bottom:5px;">Wszystkie darmowe bramki proxy CORS są chwilowo zablokowane przez FiveM.</p>
+                        <p style='font-size:0.85rem; opacity:0.7;'>Zabezpieczenia Cloudflare odrzuciły zapytanie. Odczekaj chwilę i spróbuj kliknąć przycisk <strong>ODŚWIEŻ</strong> ponownie.</p>
+                    </div>`;
+                }
             }
         }
     }
