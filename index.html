@@ -170,10 +170,23 @@
     }
     document.getElementById('themePicker').addEventListener('input', (e) => setTheme(e.target.value));
 
-    // Automatyczna rotacja i próby ominięcia blokad przez publiczne proxy
+    // NAPRAWIONA FUNKCJA POBIERANIA DANYCH
     async function fetchServerData(serverId) {
-        const targetUrl = `https://servers-frontend.fivem.net/api/servers/single/${serverId}`;
+        // Zaktualizowany do nowego, obecnie działającego endpointu API FiveM
+        const targetUrl = `https://frontend.cfx-services.net/api/servers/single/${serverId}`;
         
+        // 1. Najpierw próbujemy połączyć się z API bez proxy (nowe API nie blokuje zapytań)
+        try {
+            const res = await fetch(targetUrl);
+            if (res.ok) { 
+                const json = await res.json(); 
+                if (json && json.Data) return json.Data; 
+            }
+        } catch(e) {
+            console.warn("Połączenie bezpośrednie zablokowane. Próba proxy...");
+        }
+
+        // 2. Awaryjne próby przez proxy (jeśli bezpośrednie zawiedzie)
         if (MY_PROXY) {
             try {
                 const res = await fetch(`${MY_PROXY}${encodeURIComponent(targetUrl)}`);
@@ -181,9 +194,10 @@
             } catch(e) {}
         }
 
+        // Zmieniono na api.allorigins.win, ponieważ corsproxy i codetabs są często na czarnej liście Cloudflare
         const publicProxies = [
-            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-            `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`
+            `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
+            `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`
         ];
 
         for (let proxyUrl of publicProxies) {
@@ -191,7 +205,12 @@
                 const res = await fetch(proxyUrl);
                 if (res.ok) {
                     const json = await res.json();
-                    if (json && json.Data) return json.Data;
+                    if (proxyUrl.includes('allorigins')) {
+                        const parsed = JSON.parse(json.contents);
+                        if (parsed && parsed.Data) return parsed.Data;
+                    } else if (json && json.Data) {
+                        return json.Data;
+                    }
                 }
             } catch(e) {}
         }
@@ -240,7 +259,7 @@
             statusDot.className = "dot error";
             statusText.innerText = "BLOKADA API";
             document.getElementById('counter').innerHTML = `Online: <strong>0</strong>`;
-            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>FiveM odrzuciło połączenie. Spróbuj kliknąć ODŚWIEŻ za chwilę.</p>";
+            grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>FiveM odrzuciło połączenie. Serwer ukrywa graczy lub blokuje zapytania. Spróbuj kliknąć ODŚWIEŻ za chwilę.</p>";
         }
         refreshBtn.innerText = "ODŚWIEŻ";
     }
@@ -272,7 +291,7 @@
 
         if (players.length === 0) {
             if (totalClients > 0) {
-                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'>Serwer ukrywa listę graczy, ale wykryto <strong>" + totalClients + "</strong> osób online.</p>";
+                grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.8; text-align:center; color: var(--gold); padding: 20px;'>Serwer ukrywa listę graczy (Streamer Mode), ale połączonych jest <strong>" + totalClients + "</strong> osób.</p>";
             } else {
                 grid.innerHTML = "<p style='grid-column:1/-1; opacity:0.5; text-align:center;'>Brak graczy online.</p>";
             }
